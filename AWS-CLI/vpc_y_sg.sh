@@ -44,7 +44,7 @@ echo "Clave privada guardada en: $PRIVATE_KEY_FILE"
 
 # Crear VPC
 VPC_ID=$(aws ec2 create-vpc --cidr-block $VPC_CIDR --region $REGION --query 'Vpc.VpcId' --output text)
-aws ec2 create-tags --resources $VPC_ID --tags Key=Name,Value="vpc-mensagl-2025-${NOMBRE_ALUMNO}-vpc" --region $REGION
+aws ec2 create-tags --resources $VPC_ID --tags Key=Name,Value="vpc-mensagl-2025-${NOMBRE_ALUMNO}" --region $REGION
 
 # Habilitar DNS support y DNS hostnames
 aws ec2 modify-vpc-attribute --vpc-id $VPC_ID --enable-dns-support --region $REGION
