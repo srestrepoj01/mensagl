@@ -182,7 +182,7 @@ echo "RDS Endpoint: $RDS_ENDPOINT"
 ##############################
 
 # proxy-zona-1
-INSTANCE_NAME="PROXY-1"
+INSTANCE_NAME="proxy-zona1"
 SUBNET_ID="${SUBNET_PUBLIC1_ID}"
 SECURITY_GROUP_ID="${SG_PROXY_ID}"
 PRIVATE_IP="10.0.1.10"
@@ -217,7 +217,7 @@ echo url="https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAIN}&token=${DU
 DUCKDNS_SCRIPT
 chmod +x duckdns.sh
 (crontab -l 2>/dev/null; echo "*/5 * * * * /opt/duckdns/duckdns.sh >/dev/null 2>&1") | crontab -
-echo "DDNS instalado !"
+echo "DDNS INSTALADO / CONFIGURADO"
 EOF
 )
 
@@ -234,7 +234,7 @@ INSTANCE_ID=$(aws ec2 run-instances \
 echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 # PROXY-2
-INSTANCE_NAME="PROXY-2"
+INSTANCE_NAME="proxy-zona2"
 SUBNET_ID="${SUBNET_PUBLIC2_ID}"
 PRIVATE_IP="10.0.2.10"
 
@@ -266,7 +266,7 @@ echo url="https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAIN2}&token=${D
 DUCKDNS_SCRIPT
 chmod +x duckdns.sh
 (crontab -l 2>/dev/null; echo "*/5 * * * * /opt/duckdns/duckdns.sh >/dev/null 2>&1") | crontab -
-echo "DDNS CONFIGURADO"
+echo "DDNS CONFIGURADO / INSTALADO"
 EOF
 )
 INSTANCE_ID=$(aws ec2 run-instances \
