@@ -1,34 +1,37 @@
 #!/bin/bash
 
-##############################                       
-#            VPC             #
-##############################
+###########################################                       
+#            VARIABLES DE PRUEBA          #
+###########################################
 
 # Variables VPC
 read -r -p "Pon el nombre del laboratorio: " NOMBRE_ALUMNO
 REGION="us-east-1"
 
 # Variables DDNS
-# read -r -p "Ingrese el TOKEN de DDNS: " TOKEN
-# read -r -p "Ingrese el primer subdominio (proxy-1): " SUB_DOMINIO_1
-# read -r -p "Ingrese el segundo subdominio (proxy-2): " SUB_DOMINIO_2"
-
-# Crear clave SSH
-aws ec2 create-key-pair \
-    --key-name "ssh-mensagl-2025-${NOMBRE_ALUMNO}" \
-    --query 'KeyMaterial' \
-    --output text > "ssh-mensagl-2025-${NOMBRE_ALUMNO}.pem"
-chmod 400 "ssh-mensagl-2025-${NOMBRE_ALUMNO}.pem"
+# read -r -p "Ingrese el TOKEN de DDNS: " DUCKDNS_TOKEN
+# read -r -p "Ingrese el primer subdominio (proxy-1): " DUCKDNS_SUBDOMAIN
+# read -r -p "Ingrese el segundo subdominio (proxy-2): " DUCKDNS_SUBDOMAIN2
 
 # Variables AMI-ID (Ubuntu server 24.04) y CLAVE SSH
 KEY_NAME="ssh-mensagl-2025-${NOMBRE_ALUMNO}"
 AMI_ID="ami-04b4f1a9cf54c11d0" # Llamar variable claves         
 
-# Variables for RDS, se pueden cambiar los valores por los deseados
+# Crear par de claves SSH
+aws ec2 create-key-pair \
+    --key-name "${KEY_NAME}" \
+    --query "KeyMaterial" \
+    --output text > "${KEY_NAME}.pem"
+chmod 400 "${KEY_NAME}.pem"
+echo "Clave SSH creada: ${KEY_NAME}.pem"
+
+
+# Variables para RDS, se pueden cambiar los valores por los deseados
 RDS_INSTANCE_ID="wordpress-db"
 read -r -p "Ingrese el nombre de la base de datos: " DB_NAME
 read -r -p "Ingrese el nombre de usuario de la BD: " DB_USERNAME
 read -r -p "Ingrese la contraseña de la BD: " DB_PASSWORD
+
 
 ##############################                       
 #             VPC             #
@@ -127,31 +130,97 @@ aws ec2 authorize-security-group-ingress --group-id "$SG_JITSI_ID" --protocol ud
 aws ec2 authorize-security-group-ingress --group-id "$SG_JITSI_ID" --protocol tcp --port 5347 --source-group "$SG_MENSAJERIA_ID"
 aws ec2 authorize-security-group-egress --group-id "$SG_JITSI_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
 
-# Grupo de seguridad para RDS MySQL
-SG_RDS_MYSQL_ID=$(aws ec2 create-security-group --group-name "sg_rds_mysql" --description "SG para el RDS del CMS" --vpc-id "$VPC_ID" --query 'GroupId' --output text)
-aws ec2 authorize-security-group-ingress --group-id "$SG_RDS_MYSQL_ID" --protocol tcp --port 3306 --cidr "0.0.0.0/0"
-aws ec2 authorize-security-group-egress --group-id "$SG_RDS_MYSQL_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
-
-
 ##############################                       
-# Crear instancias EC2 + RDS #
+#             RDS             #
 ##############################
 
-# proxy-zona1
-# ====== Variables ======
-INSTANCE_NAME="proxy-zona1"             # Tag: NOMBRE DE LA INSTANCIA
-SUBNET_ID="${SUBNET_PUBLIC1}"           # ID DE LA SUBNET
-SECURITY_GROUP_ID="${SG_ID_PROXY}"      # ID SG
-PRIVATE_IP="10.0.1.10"                  # IP PRIVADA INSTANCIA
+# Crear subnet RDS
+aws rds create-db-subnet-group \
+    --db-subnet-group-name wp-rds-subnet-group \
+    --db-subnet-group-description "RDS Subnet Group for WordPress" \
+    --subnet-ids "$SUBNET_PRIVATE1" "$SUBNET_PRIVATE2"
 
-INSTANCE_TYPE="t2.micro"                # TIPO DE LA INSTANCIA
-KEY_NAME="${KEY_NAME}"                  # CLAVES SSH
-VOLUME_SIZE=8                           # TAMAÑO VOLUMEN
-USER_DATA_SCRIPT=$(cat <<'EOF'
-# UNA VEZ SE TENGA, AÑADIR SCRIPT
+
+# Crear grupo de seguridad de RDS
+SG_ID_RDS=$(aws ec2 create-security-group \
+  --group-name "sg_rds" \
+  --description "Grupo de seguridad de RDS" \
+  --vpc-id "$VPC_ID" \
+  --query 'GroupId' \
+  --output text)
+
+
+# Crear instancia RDS (Single-AZ en Private Subnet 2)
+aws rds create-db-instance \
+    --db-instance-identifier "$RDS_INSTANCE_ID" \
+    --db-instance-class db.t3.medium \
+    --engine mysql \
+    --allocated-storage 20 \
+    --storage-type gp2 \
+    --master-username "$DB_USERNAME" \
+    --master-user-password "$DB_PASSWORD" \
+    --db-subnet-group-name wp-rds-subnet-group \
+    --vpc-security-group-ids "$SG_ID_RDS" \
+    --backup-retention-period 7 \
+    --no-publicly-accessible \
+    --availability-zone "us-east-1b" \
+    --no-multi-az  # Se asegura que no se despliega en multiple AZ
+
+# ESPERA A QUE EL RDS ESTE DISPONIBLE
+echo "ESPERANDO A QUE EL RDS ESTE DISPONIBLE..."
+aws rds wait db-instance-available --db-instance-identifier "$RDS_INSTANCE_ID"
+
+# Recibe el RDS ENDPOINT PARA USARLO MAS ADELANTE
+RDS_ENDPOINT=$(aws rds describe-db-instances \
+    --db-instance-identifier "$RDS_INSTANCE_ID" \
+    --query 'DBInstances[0].Endpoint.Address' \
+    --output text)
+echo "RDS Endpoint: $RDS_ENDPOINT"
+
+##############################                       
+#   Crear instancias EC2     #
+##############################
+
+# proxy-zona-1
+INSTANCE_NAME="PROXY-1"
+SUBNET_ID="${SUBNET_PUBLIC1_ID}"
+SECURITY_GROUP_ID="${SG_PROXY_ID}"
+PRIVATE_IP="10.0.1.10"
+INSTANCE_TYPE="t2.micro"
+VOLUME_SIZE=8
+
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+apt-get update -y
+apt-get install haproxy -y
+
+cat <<CONFIG > /etc/haproxy/haproxy.cfg
+frontend http_front
+    bind *:80
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    server backend1 10.0.3.20:80 check
+    server backend2 10.0.3.30:80 check
+CONFIG
+
+systemctl restart haproxy
+systemctl enable haproxy
+
+mkdir -p /opt/duckdns
+cd /opt/duckdns
+
+cat <<DUCKDNS_SCRIPT > duckdns.sh
+#!/bin/bash
+echo url="https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAIN}&token=${DUCKDNS_TOKEN}&ip=" | curl -k -o /opt/duckdns/duck.log -K -
+DUCKDNS_SCRIPT
+chmod +x duckdns.sh
+(crontab -l 2>/dev/null; echo "*/5 * * * * /opt/duckdns/duckdns.sh >/dev/null 2>&1") | crontab -
+echo "DDNS instalado !"
 EOF
 )
-# ====== Create EC2 Instance ======
+
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
     --instance-type "$INSTANCE_TYPE" \
@@ -159,28 +228,47 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
     --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
-    --user-data "$(echo "$USER_DATA_SCRIPT" | sed "s/\$TOKEN/$TOKEN/g" | sed "s/\$DUCKDNS_SUBDOMAIN/$SUB_DOMINIO_1/g")" \
+    --user-data "$USER_DATA_SCRIPT" \
     --query "Instances[0].InstanceId" \
     --output text)
-echo "${INSTANCE_NAME} created";
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 # PROXY-2
-# ====== Variables ======
-INSTANCE_NAME="proxy-zona2"         # Tag: NOMBRE DE LA INSTANCIA             
-SUBNET_ID="${SUBNET_PUBLIC2}"       # ID DE LA SUBNET     
-SECURITY_GROUP_ID="${SG_ID_PROXY}"  # ID SG
-PRIVATE_IP="10.0.2.10"              # IP PRIVADA INSTANCIA  
+INSTANCE_NAME="PROXY-2"
+SUBNET_ID="${SUBNET_PUBLIC2_ID}"
+PRIVATE_IP="10.0.2.10"
 
-INSTANCE_TYPE="t2.micro"            # TIPO DE LA INSTANCIA    
-KEY_NAME="${KEY_NAME}"              # CLAVES SSH   
-VOLUME_SIZE=8                       # TAMAÑO VOLUMEN   
-USER_DATA_SCRIPT=$(cat <<'EOF'
-# UNA VEZ SE TENGA, AÑADIR SCRIPT
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+apt-get update -y
+apt-get install haproxy -y
+
+cat <<CONFIG > /etc/haproxy/haproxy.cfg
+frontend http_front
+    bind *:80
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    server backend1 10.0.4.10:80 check
+    server backend2 10.0.4.11:80 check
+CONFIG
+
+systemctl restart haproxy
+systemctl enable haproxy
+
+mkdir -p /opt/duckdns
+cd /opt/duckdns
+
+cat <<DUCKDNS_SCRIPT > duckdns.sh
+#!/bin/bash
+echo url="https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAIN2}&token=${DUCKDNS_TOKEN}&ip=" | curl -k -o /opt/duckdns/duck.log -K -
+DUCKDNS_SCRIPT
+chmod +x duckdns.sh
+(crontab -l 2>/dev/null; echo "*/5 * * * * /opt/duckdns/duckdns.sh >/dev/null 2>&1") | crontab -
+echo "DDNS CONFIGURADO"
 EOF
 )
-
-
-# ====== CREAR INSTANCIA ======
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
     --instance-type "$INSTANCE_TYPE" \
@@ -188,17 +276,254 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
     --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
-    --user-data "$(echo "$USER_DATA_SCRIPT" | sed "s/\$TOKEN/$TOKEN/g" | sed "s/\$DUCKDNS_SUBDOMAIN2/$SUB_DOMINIO_2/g")" \
+    --user-data "$USER_DATA_SCRIPT" \
     --query "Instances[0].InstanceId" \
     --output text)
-echo "${INSTANCE_NAME} created";
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
+##############
+#    MySQL   #
+##############
+# sgbd_principal
+INSTANCE_NAME="sgbd_principal-zona1"
+SUBNET_ID="${SUBNET_PRIVATE1_ID}"
+SECURITY_GROUP_ID="${SG_MYSQL_ID}"
+PRIVATE_IP="10.0.3.10"
 
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+set -e
+apt-get update -y
+apt-get install mysql-server mysql-client -y
+systemctl start mysql
+systemctl enable mysql
+mysql -e "CREATE DATABASE ${DB_NAME};"
+mysql -e "CREATE USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';"
+mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';"
+mysql -e "FLUSH PRIVILEGES;"
+sed -i "s/^bind-address\s*=.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
+sed -i "s/^mysqlx-bind-address\s*=.*/mysqlx-bind-address = 127.0.0.1/" /etc/mysql/mysql.conf.d/mysqld.cnf
+echo "MySQL-DB-WORDPRESS CONFIGURADO"
+EOF
+)
 
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+    --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+    --user-data "$USER_DATA_SCRIPT" \
+    --query "Instances[0].InstanceId" \
+    --output text)
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
+# sgbd_secundario
+INSTANCE_NAME="sgbd_replica-zona1"
+PRIVATE_IP="10.0.3.11"
 
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+    --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+    --query "Instances[0].InstanceId" \
+    --output text)
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
+##############
+#    XMPP    #
+##############
+# xmpp-cluster-1
+INSTANCE_NAME="xmpp-cluster-1"
+SUBNET_ID="${SUBNET_PRIVATE1_ID}"
+SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
+PRIVATE_IP="10.0.3.20"
 
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+apt-get update -y
+apt-get install prosody -y
 
+# Configuración básica de Prosody
+cat <<CONFIG > /etc/prosody/prosody.cfg.lua
+VirtualHost "xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org"
+    ssl = {
+        key = "/etc/prosody/certs/xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org.key";
+        certificate = "/etc/prosody/certs/xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org.crt";
+    }
+    modules_enabled = {
+        "roster";
+        "saslauth";
+        "tls";
+        "dialback";
+        "disco";
+        "carbons";
+        "pep";
+        "private";
+        "blocklist";
+        "vcard";
+        "version";
+        "uptime";
+        "time";
+        "ping";
+        "register";
+    }
+CONFIG
 
+# Crear certificados autofirmados (opcional, usar certificados válidos en producción)
+mkdir -p /etc/prosody/certs
+openssl req -new -x509 -days 365 -nodes -out "/etc/prosody/certs/xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org.crt" -keyout "/etc/prosody/certs/xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org.key" -subj "/CN=xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org"
 
+systemctl restart prosody
+systemctl enable prosody
+echo "XMPP PROSODY CONFIGURADO CORRECTAMENTE"
+EOF
+)
+
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+    --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+    --user-data "$USER_DATA_SCRIPT" \
+    --query "Instances[0].InstanceId" \
+    --output text)
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+
+# XMPP-2
+INSTANCE_NAME="xmpp-cluster-2"
+PRIVATE_IP="10.0.3.30"
+
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+    --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+    --query "Instances[0].InstanceId" \
+    --output text)
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+
+##############
+# WORDPRESS  #
+##############
+# cms-cluster-1
+INSTANCE_NAME="cms-cluster-1"
+SUBNET_ID="${SUBNET_PRIVATE2_ID}"
+SECURITY_GROUP_ID="${SG_CMS_ID}"
+PRIVATE_IP="10.0.4.10"
+
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/#!/bin/bash
+set -e
+sudo apt update
+sudo apt install apache2 mysql-client mysql-server php php-mysql -y
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+sudo mv wp-cli.phar /usr/local/bin/wp
+sudo rm -rf /var/www/html/*
+sudo chmod -R 755 /var/www/html
+sudo chown -R ubuntu:ubuntu /var/www/html
+# MySQL credentials
+MYSQL_CMD="mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD}"
+$MYSQL_CMD <<EOF2
+CREATE DATABASE IF NOT EXISTS ${DB_NAME};
+CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';
+FLUSH PRIVILEGES;
+EOF2
+sudo -u ubuntu -k -- wp core download --path=/var/www/html
+sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
+sudo -u ubuntu -k -- wp core install --url=10.0.4.100  --title=Site_Title --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email=majam02@educantabria.es --path=/var/www/html
+#sudo -u ubuntu -k -- wp option update home 'http://10.0.4.10' --path=/var/www/html
+#sudo -u ubuntu -k -- wp option update siteurl 'http://10.0.4.10' --path=/var/www/html
+sudo -u ubuntu -k -- wp plugin install supportcandy --activate --path=/var/www/html
+echo "Wordpress mounted !!"
+EOF
+)
+
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+    --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+    --user-data "$USER_DATA_SCRIPT" \
+    --query "Instances[0].InstanceId" \
+    --output text)
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+
+# cms-cluster-2
+INSTANCE_NAME="cms-cluster-1"
+SUBNET_ID="${SUBNET_PRIVATE2_ID}"
+SECURITY_GROUP_ID="${SG_CMS_ID}"
+PRIVATE_IP="10.0.4.11"
+
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+set -e
+apt-get update -y
+apt-get install apache2 mysql-client php libapache2-mod-php php-mysql -y
+
+# Descargar WordPress
+curl -O https://wordpress.org/latest.tar.gz
+tar -xvzf latest.tar.gz -C /var/www/html --strip-components=1
+chown -R www-data:www-data /var/www/html
+chmod -R 755 /var/www/html
+
+# Configurar WordPress
+cat <<WP_CONFIG > /var/www/html/wp-config.php
+<?php
+define('DB_NAME', '${DB_NAME}');
+define('DB_USER', '${DB_USERNAME}');
+define('DB_PASSWORD', '${DB_PASSWORD}');
+define('DB_HOST', '${RDS_ENDPOINT}');
+define('DB_CHARSET', 'utf8');
+define('DB_COLLATE', '');
+\$table_prefix = 'wp_';
+define('WP_DEBUG', false);
+if (!defined('ABSPATH')) {
+    define('ABSPATH', __DIR__ . '/');
+}
+require_once ABSPATH . 'wp-settings.php';
+WP_CONFIG
+
+# Configurar Apache
+cat <<APACHE_CONFIG > /etc/apache2/sites-available/wordpress.conf
+<VirtualHost *:80>
+    DocumentRoot /var/www/html
+    <Directory /var/www/html>
+        AllowOverride All
+        Require all granted
+    </Directory>
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+APACHE_CONFIG
+
+a2ensite wordpress.conf
+a2enmod rewrite
+systemctl restart apache2
+systemctl enable apache2
+echo "Wordpress instalado / configurado"
+EOF
+)
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+    --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+    --user-data "$USER_DATA_SCRIPT" \
+    --query "Instances[0].InstanceId" \
+    --output text)
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
