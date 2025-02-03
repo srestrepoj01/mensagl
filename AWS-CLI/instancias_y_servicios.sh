@@ -1,3 +1,5 @@
+ # INCLUIR ARCHIVO PARA LLAMAR VARIABLES
+ source vpc_y_sg+rds.sh
 ##############################                       
 #   Crear instancias EC2     #
 ##############################
@@ -6,7 +8,7 @@
 INSTANCE_NAME="proxy-zona1"
 SUBNET_ID="${SUBNET_PUBLIC1_ID}"
 SECURITY_GROUP_ID="${SG_PROXY_ID}"
-PRIVATE_IP="10.0.1.10"
+PRIVATE_IP="10.225.1.10"
 INSTANCE_TYPE="t2.micro"
 VOLUME_SIZE=8
 
@@ -22,8 +24,8 @@ frontend http_front
 
 backend http_back
     balance roundrobin
-    server backend1 10.0.3.20:80 check
-    server backend2 10.0.3.30:80 check
+    server backend1 10.225.3.20:80 check
+    server backend2 10.225.3.30:80 check
 CONFIG
 
 systemctl restart haproxy
@@ -57,7 +59,7 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 # PROXY-2
 INSTANCE_NAME="proxy-zona2"
 SUBNET_ID="${SUBNET_PUBLIC2_ID}"
-PRIVATE_IP="10.0.2.10"
+PRIVATE_IP="10.225.2.10"
 
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
@@ -71,8 +73,8 @@ frontend http_front
 
 backend http_back
     balance roundrobin
-    server backend1 10.0.4.10:80 check
-    server backend2 10.0.4.11:80 check
+    server backend1 10.225.4.10:80 check
+    server backend2 10.255.4.11:80 check
 CONFIG
 
 systemctl restart haproxy
@@ -109,7 +111,7 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 INSTANCE_NAME="sgbd_principal-zona1"
 SUBNET_ID="${SUBNET_PRIVATE1_ID}"
 SECURITY_GROUP_ID="${SG_MYSQL_ID}"
-PRIVATE_IP="10.0.3.10"
+PRIVATE_IP="10.225.3.10"
 
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
@@ -142,7 +144,7 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 # sgbd_secundario
 INSTANCE_NAME="sgbd_replica-zona1"
-PRIVATE_IP="10.0.3.11"
+PRIVATE_IP="10.225.3.11"
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -162,7 +164,7 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 INSTANCE_NAME="xmpp-cluster-1"
 SUBNET_ID="${SUBNET_PRIVATE1_ID}"
 SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
-PRIVATE_IP="10.0.3.20"
+PRIVATE_IP="10.225.3.20"
 
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
@@ -219,7 +221,7 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 # XMPP-2
 INSTANCE_NAME="xmpp-cluster-2"
-PRIVATE_IP="10.0.3.30"
+PRIVATE_IP="10.225.3.30"
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -239,7 +241,7 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 INSTANCE_NAME="cms-cluster-1"
 SUBNET_ID="${SUBNET_PRIVATE2_ID}"
 SECURITY_GROUP_ID="${SG_CMS_ID}"
-PRIVATE_IP="10.0.4.10"
+PRIVATE_IP="10.225.4.10"
 
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/#!/bin/bash
@@ -262,9 +264,9 @@ FLUSH PRIVILEGES;
 EOF2
 sudo -u ubuntu -k -- wp core download --path=/var/www/html
 sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
-sudo -u ubuntu -k -- wp core install --url=10.0.4.100  --title=Site_Title --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email=majam02@educantabria.es --path=/var/www/html
-#sudo -u ubuntu -k -- wp option update home 'http://10.0.4.10' --path=/var/www/html
-#sudo -u ubuntu -k -- wp option update siteurl 'http://10.0.4.10' --path=/var/www/html
+sudo -u ubuntu -k -- wp core install --url=10.225.4.100  --title=Site_Title --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email=majam02@educantabria.es --path=/var/www/html
+#sudo -u ubuntu -k -- wp option update home 'http://10.225.4.10' --path=/var/www/html
+#sudo -u ubuntu -k -- wp option update siteurl 'http://10.225.4.10' --path=/var/www/html
 sudo -u ubuntu -k -- wp plugin install supportcandy --activate --path=/var/www/html
 echo "WP configurado / montado"
 EOF
@@ -286,7 +288,7 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 INSTANCE_NAME="cms-cluster-1"
 SUBNET_ID="${SUBNET_PRIVATE2_ID}"
 SECURITY_GROUP_ID="${SG_CMS_ID}"
-PRIVATE_IP="10.0.4.11"
+PRIVATE_IP="10.225.4.11"
 
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/#!/bin/bash
@@ -309,9 +311,9 @@ FLUSH PRIVILEGES;
 EOF2
 sudo -u ubuntu -k -- wp core download --path=/var/www/html
 sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
-sudo -u ubuntu -k -- wp core install --url=10.0.4.100  --title=Site_Title --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email=majam02@educantabria.es --path=/var/www/html
-#sudo -u ubuntu -k -- wp option update home 'http://10.0.4.10' --path=/var/www/html
-#sudo -u ubuntu -k -- wp option update siteurl 'http://10.0.4.10' --path=/var/www/html
+sudo -u ubuntu -k -- wp core install --url=10.225.4.100  --title=Site_Title --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email=majam02@educantabria.es --path=/var/www/html
+#sudo -u ubuntu -k -- wp option update home 'http://10.225.4.10' --path=/var/www/html
+#sudo -u ubuntu -k -- wp option update siteurl 'http://10.225.4.10' --path=/var/www/html
 sudo -u ubuntu -k -- wp plugin install supportcandy --activate --path=/var/www/html
 echo "WP configurado / montado"
 EOF

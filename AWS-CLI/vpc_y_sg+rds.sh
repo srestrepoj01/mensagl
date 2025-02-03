@@ -37,16 +37,16 @@ read -r -p "Ingrese la contraseña de la BD: " DB_PASSWORD
 #             VPC             #
 ##############################
 # Crear VPC
-VPC_ID=$(aws ec2 create-vpc --cidr-block "10.0.0.0/16" --query 'Vpc.VpcId' --output text)
+VPC_ID=$(aws ec2 create-vpc --cidr-block "10.225.0.0/16" --query 'Vpc.VpcId' --output text)
 aws ec2 create-tags --resources "$VPC_ID" --tags Key=Name,Value="vpc-mensagl-2025-${NOMBRE_ALUMNO}"
 
 # Crear Subnets publicas
-SUBNET_PUBLIC1_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.0.1.0/24" --availability-zone "${REGION}a" --query 'Subnet.SubnetId' --output text)
-SUBNET_PUBLIC2_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.0.2.0/24" --availability-zone "${REGION}b" --query 'Subnet.SubnetId' --output text)
+SUBNET_PUBLIC1_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.225.1.0/24" --availability-zone "${REGION}a" --query 'Subnet.SubnetId' --output text)
+SUBNET_PUBLIC2_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.225.2.0/24" --availability-zone "${REGION}b" --query 'Subnet.SubnetId' --output text)
 
 # Crear Subnets privadas
-SUBNET_PRIVATE1_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.0.3.0/24" --availability-zone "${REGION}a" --query 'Subnet.SubnetId' --output text)
-SUBNET_PRIVATE2_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.0.4.0/24" --availability-zone "${REGION}b" --query 'Subnet.SubnetId' --output text)
+SUBNET_PRIVATE1_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.225.3.0/24" --availability-zone "${REGION}a" --query 'Subnet.SubnetId' --output text)
+SUBNET_PRIVATE2_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.225.4.0/24" --availability-zone "${REGION}b" --query 'Subnet.SubnetId' --output text)
 
 # Crear Internet Gateway
 IGW_ID=$(aws ec2 create-internet-gateway --query 'InternetGateway.InternetGatewayId' --output text)
