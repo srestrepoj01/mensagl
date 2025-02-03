@@ -1,5 +1,9 @@
 #!/bin/bash
 
+##############################                       
+#            VPC             #
+##############################
+
 # Variables
 NOMBRE_ALUMNO="equipo5" # Cambiar por la que sea del alumno
 REGION="us-east-1"
@@ -56,7 +60,9 @@ RTB_PRIVATE2_ID=$(aws ec2 create-route-table --vpc-id "$VPC_ID" --query 'RouteTa
 aws ec2 create-route --route-table-id "$RTB_PRIVATE2_ID" --destination-cidr-block "0.0.0.0/0" --nat-gateway-id "$NAT_ID"
 aws ec2 associate-route-table --subnet-id "$SUBNET_PRIVATE2_ID" --route-table-id "$RTB_PRIVATE2_ID"
 
-# Crear Grupos de Seguridad
+##############################                       
+# Crear Grupos de Seguridad  #
+##############################
 
 # Grupo de seguridad para los Proxy Inversos
 SG_PROXY_ID=$(aws ec2 create-security-group --group-name "sg_proxy_inverso" --description "SG para el proxy inverso" --vpc-id "$VPC_ID" --query 'GroupId' --output text)
