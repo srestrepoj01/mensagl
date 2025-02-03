@@ -5,13 +5,13 @@
 ##############################
 
 # Variables VPC
-NOMBRE_ALUMNO="equipo5" # Cambiar por la que sea del alumno
+read -r -p "Pon el nombre del laboratorio: " NOMBRE_ALUMNO
 REGION="us-east-1"
 
 # Variables DDNS
-#TOKEN= ""
-#SUB_DOMINIO_1= ""
-#SUB_DOMINIO_2= ""
+# read -r -p "Ingrese el TOKEN de DDNS: " TOKEN
+# read -r -p "Ingrese el primer subdominio (proxy-1): " SUB_DOMINIO_1
+# read -r -p "Ingrese el segundo subdominio (proxy-2): " SUB_DOMINIO_2"
 
 # Crear clave SSH
 aws ec2 create-key-pair \
@@ -26,10 +26,9 @@ AMI_ID="ami-04b4f1a9cf54c11d0" # Llamar variable claves
 
 # Variables for RDS, se pueden cambiar los valores por los deseados
 RDS_INSTANCE_ID="wordpress-db"
-DB_NAME="wp_db" 
-DB_USERNAME="admin"
-DB_PASSWORD="Admin123"
-
+read -r -p "Ingrese el nombre de la base de datos: " DB_NAME
+read -r -p "Ingrese el nombre de usuario de la BD: " DB_USERNAME
+read -r -p "Ingrese la contraseña de la BD: " DB_PASSWORD
 
 ##############################                       
 #             VPC             #
