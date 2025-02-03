@@ -445,7 +445,7 @@ sudo -u ubuntu -k -- wp core install --url=10.0.4.100  --title=Site_Title --admi
 #sudo -u ubuntu -k -- wp option update home 'http://10.0.4.10' --path=/var/www/html
 #sudo -u ubuntu -k -- wp option update siteurl 'http://10.0.4.10' --path=/var/www/html
 sudo -u ubuntu -k -- wp plugin install supportcandy --activate --path=/var/www/html
-echo "Wordpress mounted !!"
+echo "WP configurado / montado"
 EOF
 )
 
@@ -468,52 +468,31 @@ SECURITY_GROUP_ID="${SG_CMS_ID}"
 PRIVATE_IP="10.0.4.11"
 
 USER_DATA_SCRIPT=$(cat <<EOF
-#!/bin/bash
+#!/bin/#!/bin/bash
 set -e
-apt-get update -y
-apt-get install apache2 mysql-client php libapache2-mod-php php-mysql -y
-
-# Descargar WordPress
-curl -O https://wordpress.org/latest.tar.gz
-tar -xvzf latest.tar.gz -C /var/www/html --strip-components=1
-chown -R www-data:www-data /var/www/html
-chmod -R 755 /var/www/html
-
-# Configurar WordPress
-cat <<WP_CONFIG > /var/www/html/wp-config.php
-<?php
-define('DB_NAME', '${DB_NAME}');
-define('DB_USER', '${DB_USERNAME}');
-define('DB_PASSWORD', '${DB_PASSWORD}');
-define('DB_HOST', '${RDS_ENDPOINT}');
-define('DB_CHARSET', 'utf8');
-define('DB_COLLATE', '');
-\$table_prefix = 'wp_';
-define('WP_DEBUG', false);
-if (!defined('ABSPATH')) {
-    define('ABSPATH', __DIR__ . '/');
-}
-require_once ABSPATH . 'wp-settings.php';
-WP_CONFIG
-
-# Configurar Apache
-cat <<APACHE_CONFIG > /etc/apache2/sites-available/wordpress.conf
-<VirtualHost *:80>
-    DocumentRoot /var/www/html
-    <Directory /var/www/html>
-        AllowOverride All
-        Require all granted
-    </Directory>
-    ErrorLog \${APACHE_LOG_DIR}/error.log
-    CustomLog \${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>
-APACHE_CONFIG
-
-a2ensite wordpress.conf
-a2enmod rewrite
-systemctl restart apache2
-systemctl enable apache2
-echo "Wordpress instalado / configurado"
+sudo apt update
+sudo apt install apache2 mysql-client mysql-server php php-mysql -y
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+sudo mv wp-cli.phar /usr/local/bin/wp
+sudo rm -rf /var/www/html/*
+sudo chmod -R 755 /var/www/html
+sudo chown -R ubuntu:ubuntu /var/www/html
+# MySQL credentials
+MYSQL_CMD="mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD}"
+$MYSQL_CMD <<EOF2
+CREATE DATABASE IF NOT EXISTS ${DB_NAME};
+CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';
+FLUSH PRIVILEGES;
+EOF2
+sudo -u ubuntu -k -- wp core download --path=/var/www/html
+sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
+sudo -u ubuntu -k -- wp core install --url=10.0.4.100  --title=Site_Title --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email=majam02@educantabria.es --path=/var/www/html
+#sudo -u ubuntu -k -- wp option update home 'http://10.0.4.10' --path=/var/www/html
+#sudo -u ubuntu -k -- wp option update siteurl 'http://10.0.4.10' --path=/var/www/html
+sudo -u ubuntu -k -- wp plugin install supportcandy --activate --path=/var/www/html
+echo "WP configurado / montado"
 EOF
 )
 INSTANCE_ID=$(aws ec2 run-instances \
