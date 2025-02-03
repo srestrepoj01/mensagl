@@ -1,5 +1,7 @@
-# Define variables
-NOMBRE_ALUMNO="equipo5" # CAMBIAR POR la que sea del alumno
+#!/bin/bash
+
+# Variables
+NOMBRE_ALUMNO="equipo5" # Cambiar por la que sea del alumno
 REGION="us-east-1"
 
 # Crear clave SSH
@@ -13,7 +15,7 @@ chmod 400 "ssh-mensagl-2025-${NOMBRE_ALUMNO}.pem"
 VPC_ID=$(aws ec2 create-vpc --cidr-block "10.0.0.0/16" --query 'Vpc.VpcId' --output text)
 aws ec2 create-tags --resources "$VPC_ID" --tags Key=Name,Value="vpc-mensagl-2025-${NOMBRE_ALUMNO}-vpc"
 
-# Crear Subnets públicas
+# Crear Subnets publicas
 SUBNET_PUBLIC1_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.0.1.0/24" --availability-zone "${REGION}a" --query 'Subnet.SubnetId' --output text)
 SUBNET_PUBLIC2_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "10.0.2.0/24" --availability-zone "${REGION}b" --query 'Subnet.SubnetId' --output text)
 
@@ -35,7 +37,7 @@ aws ec2 associate-route-table --subnet-id "$SUBNET_PUBLIC2_ID" --route-table-id 
 EIP_ID=$(aws ec2 allocate-address --query 'AllocationId' --output text)
 NAT_ID=$(aws ec2 create-nat-gateway --subnet-id "$SUBNET_PUBLIC1_ID" --allocation-id "$EIP_ID" --query 'NatGateway.NatGatewayId' --output text)
 
-echo "Esperando a que el NAT Gateway esté disponible..."
+echo "Creando GATEWAY NAT..."
 while true; do
     STATUS=$(aws ec2 describe-nat-gateways --nat-gateway-ids "$NAT_ID" --query 'NatGateways[0].State' --output text)
     echo "Estado del NAT Gateway: $STATUS"
@@ -105,4 +107,3 @@ aws ec2 authorize-security-group-egress --group-id "$SG_JITSI_ID" --protocol -1 
 SG_RDS_MYSQL_ID=$(aws ec2 create-security-group --group-name "sg_rds_mysql" --description "SG para el RDS del CMS" --vpc-id "$VPC_ID" --query 'GroupId' --output text)
 aws ec2 authorize-security-group-ingress --group-id "$SG_RDS_MYSQL_ID" --protocol tcp --port 3306 --cidr "0.0.0.0/0"
 aws ec2 authorize-security-group-egress --group-id "$SG_RDS_MYSQL_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
-
