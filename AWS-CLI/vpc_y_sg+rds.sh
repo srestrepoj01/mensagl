@@ -130,13 +130,6 @@ aws ec2 authorize-security-group-ingress --group-id "$SG_MENSAJERIA_ID" --protoc
 aws ec2 authorize-security-group-ingress --group-id "$SG_MENSAJERIA_ID" --protocol tcp --port 443 --cidr "0.0.0.0/0"
 aws ec2 authorize-security-group-egress --group-id "$SG_MENSAJERIA_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
 
-# Grupo de seguridad para Jitsi
-SG_JITSI_ID=$(aws ec2 create-security-group --group-name "sg_jitsi" --description "SG para Jitsi Meet y Videobridge" --vpc-id "$VPC_ID" --query 'GroupId' --output text)
-aws ec2 authorize-security-group-ingress --group-id "$SG_JITSI_ID" --protocol udp --port 10000 --cidr "0.0.0.0/0"
-aws ec2 authorize-security-group-ingress --group-id "$SG_JITSI_ID" --protocol tcp --port 5347 --source-group "$SG_MENSAJERIA_ID"
-aws ec2 authorize-security-group-egress --group-id "$SG_JITSI_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
-
-
 ##############################                       
 #             RDS             #
 ##############################
@@ -148,20 +141,20 @@ aws rds create-db-subnet-group \
     --subnet-ids "$SUBNET_PRIVATE1_ID" "$SUBNET_PRIVATE2_ID"
 
 
-# Create Security Group for RDS
+# SG de RDS
 SG_ID_RDS=$(aws ec2 create-security-group \
   --group-name "RDS-MySQL" \
-  --description "Security group for RDS MySQL" \
+  --description "SG para RDS MySQL" \
   --vpc-id "$VPC_ID" \
   --query 'GroupId' \
   --output text)
 
-# Allow MySQL access (replace with actual security group or IP CIDR)
+# Permitir acceso MySQL
 aws ec2 authorize-security-group-ingress \
   --group-id "$SG_ID_RDS" \
   --protocol tcp \
   --port 3306 \
-  --cidr 0.0.0.0/0  # Replace with actual WordPress server CIDR
+  --cidr 0.0.0.0/0  
 
 # Crear instancia RDS (Single-AZ en Private Subnet 2)
 aws rds create-db-instance \
