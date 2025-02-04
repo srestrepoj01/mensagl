@@ -231,22 +231,8 @@ SUBNET_ID="${SUBNET_PRIVATE1_ID}"
 SECURITY_GROUP_ID="${SG_MYSQL_ID}"
 PRIVATE_IP="10.225.3.10"
 
-USER_DATA_SCRIPT=$(cat <<EOF
-#!/bin/bash
-set -e
-apt-get update -y
-apt-get install mysql-server mysql-client -y
-systemctl start mysql
-systemctl enable mysql
-mysql -e "CREATE DATABASE ${DB_NAME};"
-mysql -e "CREATE USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';"
-mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';"
-mysql -e "FLUSH PRIVILEGES;"
-sed -i "s/^bind-address\s*=.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
-sed -i "s/^mysqlx-bind-address\s*=.*/mysqlx-bind-address = 127.0.0.1/" /etc/mysql/mysql.conf.d/mysqld.cnf
-echo "MySQL-DB-WORDPRESS CONFIGURADO"
-EOF
-)
+# Cargar el script para la base de datos primaria
+USER_DATA_SCRIPT=$(cat /ruta/a/DATOS-DE-USUARIO/configuracion-bd-primaria-y-slave.sh | sed "s/\$role/primary/")
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -264,23 +250,8 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 INSTANCE_NAME="sgbd_replica-zona1"
 PRIVATE_IP="10.225.3.11"
 
-#AÑADIR SCRIPT Y ARREGLAR
-USER_DATA_SCRIPT=$(cat <<EOF
-#!/bin/bash
-set -e
-apt-get update -y
-apt-get install mysql-server mysql-client -y
-systemctl start mysql
-systemctl enable mysql
-mysql -e "CREATE DATABASE ${DB_NAME};"
-mysql -e "CREATE USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';"
-mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';"
-mysql -e "FLUSH PRIVILEGES;"
-sed -i "s/^bind-address\s*=.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
-sed -i "s/^mysqlx-bind-address\s*=.*/mysqlx-bind-address = 127.0.0.1/" /etc/mysql/mysql.conf.d/mysqld.cnf
-echo "MySQL-DB-WORDPRESS CONFIGURADO"
-EOF
-)
+# Cargar el script para la base de datos secundaria
+USER_DATA_SCRIPT=$(cat /ruta/a/DATOS-DE-USUARIO/configuracion-bd-primaria-y-slave.sh | sed "s/\$role/secondary/")
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
