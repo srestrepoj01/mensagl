@@ -140,7 +140,7 @@ aws rds create-db-subnet-group \
     --db-subnet-group-description "RDS Subnet Group for WordPress" \
     --subnet-ids "$SUBNET_PRIVATE1_ID" "$SUBNET_PRIVATE2_ID"
 
-# Create Security Group for RDS
+# Crear grupo de seguridad para el RDS
 SG_ID_RDS=$(aws ec2 create-security-group \
   --group-name "RDS-MySQL" \
   --description "SG para el RDS MySQL" \
@@ -153,7 +153,7 @@ aws ec2 authorize-security-group-ingress \
   --group-id "$SG_ID_RDS" \
   --protocol tcp \
   --port 3306 \
-  --cidr 0.0.0.0/0  # Replace with actual WordPress server CIDR
+  --cidr 0.0.0.0/0 
 
 # Crear instancia RDS (Single-AZ en Private Subnet 2)
 aws rds create-db-instance \
