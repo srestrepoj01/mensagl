@@ -3,7 +3,10 @@
 ##############################                       
 #   Crear instancias EC2     #
 ##############################
+LOG_FILE="laboratorio.log"
 
+
+exec > "$LOG_FILE" 2>&1
 # proxy-zona-1
 INSTANCE_NAME="proxy-zona1"
 SUBNET_ID="${SUBNET_PUBLIC1_ID}"
