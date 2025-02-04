@@ -23,53 +23,22 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --output text)
 echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
-# # PROXY-2
-# INSTANCE_NAME="proxy-zona2"
-# SUBNET_ID="${SUBNET_PUBLIC2_ID}"
-# PRIVATE_IP="10.225.2.10"
+# PROXY-2
+INSTANCE_NAME="proxy-zona2"
+SUBNET_ID="${SUBNET_PUBLIC2_ID}"
+PRIVATE_IP="10.225.2.10"
 
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
-# apt-get update -y
-# apt-get install haproxy -y
-
-# cat <<CONFIG > /etc/haproxy/haproxy.cfg
-# frontend http_front
-#     bind *:80
-#     default_backend http_back
-
-# backend http_back
-#     balance roundrobin
-#     server backend1 10.225.4.10:80 check
-#     server backend2 10.255.4.11:80 check
-# CONFIG
-
-# systemctl restart haproxy
-# systemctl enable haproxy
-
-# mkdir -p /opt/duckdns
-# cd /opt/duckdns
-
-# cat <<DUCKDNS_SCRIPT > duckdns.sh
-# #!/bin/bash
-# echo url="https://www.duckdns.org/update?domains=${DUCKDNS_SUBDOMAIN2}&token=${DUCKDNS_TOKEN}&ip=" | curl -k -o /opt/duckdns/duck.log -K -
-# DUCKDNS_SCRIPT
-# chmod +x duckdns.sh
-# (crontab -l 2>/dev/null; echo "*/5 * * * * /opt/duckdns/duckdns.sh >/dev/null 2>&1") | crontab -
-# echo "DDNS CONFIGURADO / INSTALADO"
-# EOF
-# )
-# INSTANCE_ID=$(aws ec2 run-instances \
-#     --image-id "$AMI_ID" \
-#     --instance-type "$INSTANCE_TYPE" \
-#     --key-name "$KEY_NAME" \
-#     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
-#     --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
-#     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
-#     --user-data "$USER_DATA_SCRIPT" \
-#     --query "Instances[0].InstanceId" \
-#     --output text)
-# echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+    --network-interfaces "SubnetId=$SUBNET_ID,AssociatePublicIpAddress=true,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+    --user-data "$USER_DATA_SCRIPT" \
+    --query "Instances[0].InstanceId" \
+    --output text)
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 ##############
 #    MySQL   #
@@ -112,6 +81,8 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 # sgbd_secundario
 INSTANCE_NAME="sgbd_replica-zona1"
 PRIVATE_IP="10.225.3.11"
+
+#AÑADIR SCRIPT Y ARREGLAR
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
