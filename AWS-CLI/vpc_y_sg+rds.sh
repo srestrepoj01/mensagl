@@ -148,7 +148,7 @@ SG_ID_RDS=$(aws ec2 create-security-group \
   --query 'GroupId' \
   --output text)
 
-# Allow MySQL access (replace with actual security group or IP CIDR)
+# Permite acceso a MySQL 
 aws ec2 authorize-security-group-ingress \
   --group-id "$SG_ID_RDS" \
   --protocol tcp \
