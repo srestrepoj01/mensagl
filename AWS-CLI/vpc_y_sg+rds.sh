@@ -138,17 +138,22 @@ aws ec2 authorize-security-group-egress --group-id "$SG_JITSI_ID" --protocol -1 
 aws rds create-db-subnet-group \
     --db-subnet-group-name wp-rds-subnet-group \
     --db-subnet-group-description "RDS Subnet Group for WordPress" \
-    --subnet-ids "$SUBNET_PRIVATE1" "$SUBNET_PRIVATE2"
+    --subnet-ids "$SUBNET_PRIVATE1_ID" "$SUBNET_PRIVATE2_ID"
 
-
-# Crear grupo de seguridad de RDS
+# Create Security Group for RDS
 SG_ID_RDS=$(aws ec2 create-security-group \
-  --group-name "sg_rds" \
-  --description "Grupo de seguridad de RDS" \
+  --group-name "RDS-MySQL" \
+  --description "SG para el RDS MySQL" \
   --vpc-id "$VPC_ID" \
   --query 'GroupId' \
   --output text)
 
+# Allow MySQL access (replace with actual security group or IP CIDR)
+aws ec2 authorize-security-group-ingress \
+  --group-id "$SG_ID_RDS" \
+  --protocol tcp \
+  --port 3306 \
+  --cidr 0.0.0.0/0  # Replace with actual WordPress server CIDR
 
 # Crear instancia RDS (Single-AZ en Private Subnet 2)
 aws rds create-db-instance \
