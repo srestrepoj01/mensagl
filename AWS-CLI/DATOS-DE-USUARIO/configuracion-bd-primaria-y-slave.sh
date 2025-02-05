@@ -46,25 +46,17 @@ if [ "$role" = "primary" ]; then
     FLUSH PRIVILEGES;
 EOF
 
-    # Obtener posición del binlog
-    sudo mysql -u root -p$db_password -e "SHOW MASTER STATUS" | awk 'NR==2 {print $1, $2}' > /tmp/master_status.txt
-
 elif [ "$role" = "secondary" ]; then
     # Esperar conexión con primario
     until nc -z $primary_ip 3306; do sleep 10; done
-
-    # Leer el estado del binlog desde el primario
-    MASTER_STATUS=$(sshpass -p 'tu_contraseña' ssh -o StrictHostKeyChecking=no ubuntu@$primary_ip "mysql -u root -p$db_password -e 'SHOW MASTER STATUS' | awk 'NR==2 {print \$1, \$2}'")
-    binlog_file=$(echo "$MASTER_STATUS" | awk '{print $1}')
-    binlog_pos=$(echo "$MASTER_STATUS" | awk '{print $2}')
 
     sudo mysql -u root -p$db_password <<EOF
     CHANGE MASTER TO
     MASTER_HOST='$primary_ip',
     MASTER_USER='$repl_user',
     MASTER_PASSWORD='$repl_password',
-    MASTER_LOG_FILE='$binlog_file',
-    MASTER_LOG_POS=$binlog_pos;
+    MASTER_LOG_FILE='mysql-bin.000001',
+    MASTER_LOG_POS=154;
     START SLAVE;
 EOF
 fi
