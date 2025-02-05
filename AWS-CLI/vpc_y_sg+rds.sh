@@ -41,8 +41,9 @@ read -r -p "Ingrese la contraseña de la BD: " DB_PASSWORD
 exec > "$LOG_FILE" 2>&1
 
 ##############################                       
-#             VPC             #
+#             VPC            #
 ##############################
+
 # Crear VPC
 VPC_ID=$(aws ec2 create-vpc --cidr-block "10.225.0.0/16" --query 'Vpc.VpcId' --output text)
 aws ec2 create-tags --resources "$VPC_ID" --tags Key=Name,Value="vpc-mensagl-2025-${NOMBRE_ALUMNO}"
