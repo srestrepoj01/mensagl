@@ -15,7 +15,7 @@ repl_password="Admin123"
 sudo apt-get update > /dev/null
 sudo apt-get install -y mysql-server mysql-client > /dev/null
 
-# 2. Configurar replicación
+# 2. Configurar replicación con GTID
 sudo tee /etc/mysql/mysql.conf.d/replication.cnf > /dev/null <<EOF
 [mysqld]
 bind-address = 0.0.0.0
@@ -24,6 +24,10 @@ log_bin = /var/log/mysql/mysql-bin.log
 binlog_format = ROW
 relay-log = /var/log/mysql/mysql-relay-bin
 log_slave_updates = 1
+
+# Habilitar GTID
+gtid_mode = ON
+enforce-gtid-consistency = ON
 EOF
 
 # 3. Reiniciar servicio
