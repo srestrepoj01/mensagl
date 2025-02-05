@@ -23,25 +23,25 @@ server-id = $( [ "$role" = "primary" ] && echo 1 || echo 2 )
 log_bin = /var/log/mysql/mysql-bin.log
 binlog_format = ROW
 relay-log = /var/log/mysql/mysql-relay-bin
+log_slave_updates = 1
 EOF
 
 # 3. Reiniciar servicio
 sudo systemctl restart mysql
 
 # 4. Configuración básica de seguridad
-sudo mysql <<EOF
+sudo mysql -u root -p"$db_password" <<EOF
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$db_password';
-DELETE FROM mysql.user WHERE User='';
 CREATE DATABASE IF NOT EXISTS $db_name;
 FLUSH PRIVILEGES;
 EOF
 
 # 5. Configuración específica por rol
 if [ "$role" = "primary" ]; then
-    sudo mysql -u root -p$db_password <<EOF
-    CREATE USER '$db_user'@'%' IDENTIFIED WITH mysql_native_password BY '$db_password';
+    sudo mysql -u root -p"$db_password" <<EOF
+    CREATE USER IF NOT EXISTS '$db_user'@'%' IDENTIFIED WITH mysql_native_password BY '$db_password';
     GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'%';
-    CREATE USER '$repl_user'@'%' IDENTIFIED WITH mysql_native_password BY '$repl_password';
+    CREATE USER IF NOT EXISTS '$repl_user'@'%' IDENTIFIED WITH mysql_native_password BY '$repl_password';
     GRANT REPLICATION SLAVE ON *.* TO '$repl_user'@'%';
     FLUSH PRIVILEGES;
 EOF
@@ -50,13 +50,14 @@ elif [ "$role" = "secondary" ]; then
     # Esperar conexión con primario
     until nc -z $primary_ip 3306; do sleep 10; done
 
-    sudo mysql -u root -p$db_password <<EOF
+    sudo mysql -u root -p"$db_password" <<EOF
+    STOP SLAVE;
+    RESET SLAVE ALL;
     CHANGE MASTER TO
     MASTER_HOST='$primary_ip',
     MASTER_USER='$repl_user',
     MASTER_PASSWORD='$repl_password',
-    MASTER_LOG_FILE='mysql-bin.000001',
-    MASTER_LOG_POS=154;
+    MASTER_AUTO_POSITION=1;
     START SLAVE;
 EOF
 fi
