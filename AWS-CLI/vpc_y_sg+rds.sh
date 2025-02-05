@@ -222,7 +222,6 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --query "Instances[0].InstanceId" \
     --output text)
 echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
-
 ##############
 #    MySQL   #
 ##############
@@ -233,7 +232,7 @@ SECURITY_GROUP_ID="${SG_MYSQL_ID}"
 PRIVATE_IP="10.225.3.10"
 
 # Cargar el script para la base de datos primaria
-USER_DATA_SCRIPT=$(sed "s/\$role/primary/" DATOS-DE-USUARIO/configuracion-bd-primaria-y-slave.sh)
+USER_DATA_SCRIPT=$(sed 's/role=".*"/role="primary"/' DATOS-DE-USUARIO/configuracion-bd-primaria-y-slave.sh)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -252,7 +251,7 @@ INSTANCE_NAME="sgbd_replica-zona1"
 PRIVATE_IP="10.225.3.11"
 
 # Cargar el script para la base de datos secundaria
-USER_DATA_SCRIPT=$(sed "s/\$role/secondary/" DATOS-DE-USUARIO/configuracion-bd-primaria-y-slave.sh)
+USER_DATA_SCRIPT=$(sed 's/role=".*"/role="secondary"/' DATOS-DE-USUARIO/configuracion-bd-primaria-y-slave.sh)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
