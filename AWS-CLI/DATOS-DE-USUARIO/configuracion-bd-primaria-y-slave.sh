@@ -53,14 +53,11 @@ elif [ "$role" = "secondary" ]; then
     # Esperar conexión con primario
     until nc -z $primary_ip 3306; do sleep 10; done
 
-    # Copiar archivo de estado usando SSH
-    sshpass -p 'tu_contraseña' scp -o StrictHostKeyChecking=no ubuntu@$primary_ip:/tmp/master_status.txt /tmp/
-
-    # Leer el archivo de estado y configurar replicación
-    MASTER_STATUS=$(cat /tmp/master_status.txt)
+    # Leer el estado del binlog desde el primario
+    MASTER_STATUS=$(sshpass -p 'tu_contraseña' ssh -o StrictHostKeyChecking=no ubuntu@$primary_ip "mysql -u root -p$db_password -e 'SHOW MASTER STATUS' | awk 'NR==2 {print \$1, \$2}'")
     binlog_file=$(echo "$MASTER_STATUS" | awk '{print $1}')
     binlog_pos=$(echo "$MASTER_STATUS" | awk '{print $2}')
-    
+
     sudo mysql -u root -p$db_password <<EOF
     CHANGE MASTER TO
     MASTER_HOST='$primary_ip',
