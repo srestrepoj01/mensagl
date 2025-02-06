@@ -30,7 +30,7 @@ SQL
 sudo -u ubuntu -k -- wp core download --path=/var/www/html
 
 # Eliminar el archivo wp-config.php existente si hay uno
-sudo -u ubuntu -k rm /var/www/html/wp-config.php
+sudo -u ubuntu -k rm -f /var/www/html/wp-config.php
 
 # Configurar wp-config.php
 sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
@@ -59,3 +59,4 @@ sudo a2dissite 000-default.conf
 sudo a2ensite wordpress.conf
 sudo a2enmod rewrite
 sudo systemctl restart apache2
+EOF
