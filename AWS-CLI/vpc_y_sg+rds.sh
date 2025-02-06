@@ -377,7 +377,7 @@ SQL
 sudo -u ubuntu -k -- wp core download --path=/var/www/html
 
 # Eliminar el archivo wp-config.php existente si hay uno
-sudo -u ubuntu -k rm /var/www/html/wp-config.php
+sudo -u ubuntu -k rm -f /var/www/html/wp-config.php
 
 # Configurar wp-config.php
 sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
