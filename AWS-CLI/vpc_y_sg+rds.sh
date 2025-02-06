@@ -13,11 +13,6 @@ LOG_FILE="laboratorio.log"
 read -r -p "Pon el nombre del laboratorio: " NOMBRE_ALUMNO
 REGION="us-east-1"
 
-# Variables DDNS
-# read -r -p "Ingrese el TOKEN de DDNS: " DUCKDNS_TOKEN
-# read -r -p "Ingrese el primer subdominio (proxy-1): " DUCKDNS_SUBDOMAIN
-# read -r -p "Ingrese el segundo subdominio (proxy-2): " DUCKDNS_SUBDOMAIN2
-
 # Variables AMI-ID (Ubuntu server 24.04) y CLAVE SSH
 KEY_NAME="ssh-mensagl-2025-${NOMBRE_ALUMNO}"
 AMI_ID="ami-04b4f1a9cf54c11d0" # Llamar variable claves         
