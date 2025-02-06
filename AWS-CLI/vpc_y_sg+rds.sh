@@ -389,7 +389,7 @@ wp plugin install user-registration --activate --path=/var/www/html
 # Configurar Apache para WordPress
 sudo bash -c 'cat > /etc/apache2/sites-available/wordpress.conf <<APACHE
 <VirtualHost *:80>
-    ServerName ${PRIVATE_IP}
+    ServerName ${PRIVATE_IP} # CAMBIAR LUEGO POR LA DE DUCKDNS
     DocumentRoot /var/www/html
     <Directory /var/www/html>
         AllowOverride All
