@@ -366,7 +366,7 @@ sudo chmod -R 755 /var/www/html
 sudo chown -R ubuntu:ubuntu /var/www/html
 
 # Configurar la base de datos en RDS
-mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} <<SQL
+mysql -h "${RDS_ENDPOINT}" -u "${DB_USERNAME}" -p"${DB_PASSWORD}" <<SQL
 CREATE DATABASE IF NOT EXISTS ${DB_NAME};
 CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';
@@ -377,26 +377,26 @@ SQL
 wp core download --path=/var/www/html
 
 # Configurar wp-config.php
-wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
+wp core config --dbname="${DB_NAME}" --dbuser="${DB_USERNAME}" --dbpass="${DB_PASSWORD}" --dbhost="${RDS_ENDPOINT}" --dbprefix="wp_" --path=/var/www/html
 
 # Instalar WordPress
-wp core install --url=http://${PRIVATE_IP} --title="Mi WordPress" --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email="admin@example.com" --path=/var/www/html
+wp core install --url="http://${PRIVATE_IP}" --title="Mi WordPress" --admin_user="${DB_USERNAME}" --admin_password="${DB_PASSWORD}" --admin_email="admin@example.com" --path=/var/www/html
 
 # Instalar plugins adicionales
 wp plugin install supportcandy --activate --path=/var/www/html
 wp plugin install user-registration --activate --path=/var/www/html
 
 # Configurar Apache para WordPress
-sudo bash -c 'cat > /etc/apache2/sites-available/wordpress.conf <<APACHE
+sudo bash -c "cat > /etc/apache2/sites-available/wordpress.conf <<APACHE
 <VirtualHost *:80>
-    ServerName ${PRIVATE_IP} # CAMBIAR LUEGO POR LA DE DUCKDNS
+    ServerName ${PRIVATE_IP}
     DocumentRoot /var/www/html
     <Directory /var/www/html>
         AllowOverride All
         Require all granted
     </Directory>
 </VirtualHost>
-APACHE'
+APACHE"
 
 # Habilitar el sitio de WordPress y reiniciar Apache
 sudo a2dissite 000-default.conf
