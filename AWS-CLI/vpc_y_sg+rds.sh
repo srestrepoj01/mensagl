@@ -135,7 +135,7 @@ aws ec2 authorize-security-group-egress --group-id "$SG_MENSAJERIA_ID" --protoco
 #             RDS             #
 ##############################
 
-# Crear subnet RDS (ya la tenías definida)
+# Crear subnet RD
 aws rds create-db-subnet-group \
     --db-subnet-group-name wp-rds-subnet-group \
     --db-subnet-group-description "RDS Subnet Group for WordPress" \
