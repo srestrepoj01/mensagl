@@ -1,3 +1,9 @@
+###########################################################
+#                                                         #
+# SE CARGA DESDE USER-DATA EN EL SCRIPT "vpc_y_sg+rds.sh" #
+#                                                         #
+###########################################################
+
 #!/bin/bash
 # Instalación de WordPress, SupportCandy, User Registration, configuración de rol personalizado "Cliente de soporte" y configuracion de DuckDNS con SSL.
 # Variables
