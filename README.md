@@ -6,4 +6,4 @@ USO DE:
 - USER DATA (carpeta DATOS DE USUARIO, dentro de cada uno de los servicios)
 
 Esquema de red planteado:
-![Description of Image](https://github.com/srestrepoj91/mensagL/blob/main/path-to-image.png?raw=true)
+(https://github.com/srestrepoj01/mensagl/blob/main/ESQUEMA-RED/esquema-srestrepoj.drawio.png)
