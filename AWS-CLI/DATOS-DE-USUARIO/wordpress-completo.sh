@@ -1,5 +1,5 @@
 ##########################################
-#    SE CARGA DESDE "vpc_y_sg+rds,sh"    #
+#    SE CARGA DESDE "vpc_y_sg+rds.sh"    #
 ##########################################
 #!/bin/bash
 set -e
@@ -19,25 +19,25 @@ sudo chmod -R 755 /var/www/html
 sudo chown -R ubuntu:ubuntu /var/www/html
 
 # Configurar la base de datos en RDS
-mysql -h "${RDS_ENDPOINT}" -u "${DB_USERNAME}" -p"${DB_PASSWORD}" <<SQL
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} <<SQL
 CREATE DATABASE IF NOT EXISTS ${DB_NAME};
 CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';
 FLUSH PRIVILEGES;
 SQL
 
-# Descargar WordPress
-wp core download --path=/var/www/html
+# Descargar WordPress como usuario ubuntu
+sudo -u ubuntu -k -- wp core download --path=/var/www/html
 
 # Configurar wp-config.php
-wp core config --dbname="${DB_NAME}" --dbuser="${DB_USERNAME}" --dbpass="${DB_PASSWORD}" --dbhost="${RDS_ENDPOINT}" --dbprefix="wp_" --path=/var/www/html
+sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
 
 # Instalar WordPress
-wp core install --url="http://${PRIVATE_IP}" --title="Mi WordPress" --admin_user="${DB_USERNAME}" --admin_password="${DB_PASSWORD}" --admin_email="admin@example.com" --path=/var/www/html
+sudo -u ubuntu -k -- wp core install --url=http://${PRIVATE_IP} --title="Mi WordPress" --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email="admin@example.com" --path=/var/www/html
 
 # Instalar plugins adicionales
-wp plugin install supportcandy --activate --path=/var/www/html
-wp plugin install user-registration --activate --path=/var/www/html
+sudo -u ubuntu -k -- wp plugin install supportcandy --activate --path=/var/www/html
+sudo -u ubuntu -k -- wp plugin install user-registration --activate --path=/var/www/html
 
 # Configurar Apache para WordPress
 sudo bash -c "cat > /etc/apache2/sites-available/wordpress.conf <<APACHE
