@@ -349,8 +349,9 @@ PRIVATE_IP="10.225.4.10"
 
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
-set -e
+LOG_FILE="/home/ubuntu/script.log"
 
+exec > "$LOG_FILE" 2>&1
 # Actualizar e instalar dependencias necesarias
 sudo apt update
 sudo apt install -y apache2 mysql-client php php-mysql libapache2-mod-php php-curl php-xml php-mbstring php-zip curl git unzip
