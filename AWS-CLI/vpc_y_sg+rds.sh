@@ -380,11 +380,11 @@ sudo -u ubuntu wp core download --path=/var/www/html
 # Eliminar el archivo wp-config.php existente si hay uno
 sudo -u ubuntu rm -f /var/www/html/wp-config.php
 
-# Configurar wp-config.php
-# sudo -u ubuntu wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
-
 # Instalar WordPress
 sudo -u ubuntu wp core install --url=http://${PRIVATE_IP} --title="Mi WordPress" --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
+
+# Configurar wp-config.php
+# sudo -u ubuntu wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
 
 # Instalar plugins adicionales
 sudo -u ubuntu wp plugin install supportcandy --activate --path=/var/www/html
