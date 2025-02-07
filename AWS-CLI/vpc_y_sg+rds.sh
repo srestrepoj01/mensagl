@@ -182,13 +182,15 @@ echo "RDS Endpoint: $RDS_ENDPOINT"
 ##################################################                       
 #             INSTANCIAS Y SERVICIOS             #
 ##################################################
-# proxy-zona-1
-INSTANCE_NAME="proxy-zona1"
+# proxy-prosody
+INSTANCE_NAME="proxy-prosody"
 SUBNET_ID="${SUBNET_PUBLIC1_ID}"
 SECURITY_GROUP_ID="${SG_PROXY_ID}"
 PRIVATE_IP="10.225.1.10"
 INSTANCE_TYPE="t2.micro"
 VOLUME_SIZE=8
+
+USER_DATA_SCRIPT=$(cat DATOS-DE-USUARIO/haproxy_prosody.sh)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -202,9 +204,11 @@ INSTANCE_ID=$(aws ec2 run-instances \
 echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 # PROXY-2
-INSTANCE_NAME="proxy-zona2"
+INSTANCE_NAME="proxy-wordpress"
 SUBNET_ID="${SUBNET_PUBLIC2_ID}"
 PRIVATE_IP="10.225.2.10"
+
+USER_DATA_SCRIPT=$(cat DATOS-DE-USUARIO/haproxy_wordpress.sh)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -263,53 +267,16 @@ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 ##############
 #    XMPP    #
-##############
-# # mensajeria-1
-# INSTANCE_NAME="mensajeria-1"
-# SUBNET_ID="${SUBNET_PRIVATE1_ID}"
-# SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
-# PRIVATE_IP="10.225.3.20"
+#############
+# mensajeria-1
+INSTANCE_NAME="mensajeria-1"
+SUBNET_ID="${SUBNET_PRIVATE1_ID}"
+SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
+PRIVATE_IP="10.225.3.20"
 
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
-# apt-get update -y
-# apt-get install prosody -y
-
-# # Configuración básica de Prosody
-# cat <<CONFIG > /etc/prosody/prosody.cfg.lua
-# VirtualHost "xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org"
-#     ssl = {
-#         key = "/etc/prosody/certs/xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org.key";
-#         certificate = "/etc/prosody/certs/xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org.crt";
-#     }
-#     modules_enabled = {
-#         "roster";
-#         "saslauth";
-#         "tls";
-#         "dialback";
-#         "disco";
-#         "carbons";
-#         "pep";
-#         "private";
-#         "blocklist";
-#         "vcard";
-#         "version";
-#         "uptime";
-#         "time";
-#         "ping";
-#         "register";
-#     }
-# CONFIG
-
-# # Crear certificados autofirmados (opcional, usar certificados válidos en producción)
-# mkdir -p /etc/prosody/certs
-# openssl req -new -x509 -days 365 -nodes -out "/etc/prosody/certs/xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org.crt" -keyout "/etc/prosody/certs/xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org.key" -subj "/CN=xmpp.${DUCKDNS_SUBDOMAIN}.duckdns.org"
-
-# systemctl restart prosody
-# systemctl enable prosody
-# echo "XMPP PROSODY CONFIGURADO CORRECTAMENTE"
-# EOF
-# )
+#USER_DATA_SCRIPT=$(cat <<EOF
+#EOF
+#)
 
 # INSTANCE_ID=$(aws ec2 run-instances \
 #     --image-id "$AMI_ID" \
@@ -349,6 +316,9 @@ PRIVATE_IP="10.225.4.10"
 
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
+##############################
+#  INSTALACION WP / PLUGINS  #
+##############################
 # Actualizar e instalar dependencias necesarias
 sudo apt update
 sudo apt install -y apache2 mysql-client php php-mysql libapache2-mod-php php-curl php-xml php-mbstring php-zip curl git unzip
