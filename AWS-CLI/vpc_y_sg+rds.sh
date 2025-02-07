@@ -360,7 +360,7 @@ curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.pha
 chmod +x wp-cli.phar
 sudo mv wp-cli.phar /usr/local/bin/wp
 
-# Limpiar el directorio de Apache
+# Limpiar el directorio de Apache y darle permisos de usuario
 sudo rm -rf /var/www/html/*
 sudo chmod -R 755 /var/www/html
 sudo chown -R ubuntu:ubuntu /var/www/html
