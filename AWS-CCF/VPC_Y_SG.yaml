@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: '2025-02-07'
 Description: Plantilla de CloudFormation para crear un laboratorio con VPC, subredes, instancias EC2, RDS, y grupos de seguridad.
 
 Parameters:
