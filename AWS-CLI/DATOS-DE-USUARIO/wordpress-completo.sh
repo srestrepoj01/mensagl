@@ -1,6 +1,3 @@
-##########################################
-#    SE CARGA DESDE "vpc_y_sg+rds.sh"    #
-##########################################
 #!/bin/bash
 set -e
 
@@ -27,20 +24,26 @@ FLUSH PRIVILEGES;
 SQL
 
 # Descargar WordPress como usuario ubuntu
-sudo -u ubuntu -k -- wp core download --path=/var/www/html
+sudo -u ubuntu wp core download --path=/var/www/html
 
 # Eliminar el archivo wp-config.php existente si hay uno
-sudo -u ubuntu -k rm -f /var/www/html/wp-config.php
+sudo -u ubuntu rm -f /var/www/html/wp-config.php
+
+# Exportar variables de entorno
+export DB_NAME=${DB_NAME}
+export DB_USERNAME=${DB_USERNAME}
+export DB_PASSWORD=${DB_PASSWORD}
+export RDS_ENDPOINT=${RDS_ENDPOINT}
 
 # Configurar wp-config.php
-sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
+# sudo -u ubuntu wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
 
 # Instalar WordPress
-sudo -u ubuntu -k -- wp core install --url=http://${PRIVATE_IP} --title="Mi WordPress" --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email="admin@example.com" --path=/var/www/html
+sudo -u ubuntu wp core install --url=http://${PRIVATE_IP} --title="Mi WordPress" --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
 
 # Instalar plugins adicionales
-sudo -u ubuntu -k -- wp plugin install supportcandy --activate --path=/var/www/html
-sudo -u ubuntu -k -- wp plugin install user-registration --activate --path=/var/www/html
+sudo -u ubuntu wp plugin install supportcandy --activate --path=/var/www/html
+sudo -u ubuntu wp plugin install user-registration --activate --path=/var/www/html
 
 # Configurar Apache para WordPress
 sudo bash -c "cat > /etc/apache2/sites-available/wordpress.conf <<APACHE
@@ -59,4 +62,3 @@ sudo a2dissite 000-default.conf
 sudo a2ensite wordpress.conf
 sudo a2enmod rewrite
 sudo systemctl restart apache2
-EOF

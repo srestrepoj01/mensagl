@@ -379,14 +379,8 @@ sudo -u ubuntu wp core download --path=/var/www/html
 # Eliminar el archivo wp-config.php existente si hay uno
 sudo -u ubuntu rm -f /var/www/html/wp-config.php
 
-# Exportar variables de entorno
-export DB_NAME=${DB_NAME}
-export DB_USERNAME=${DB_USERNAME}
-export DB_PASSWORD=${DB_PASSWORD}
-export RDS_ENDPOINT=${RDS_ENDPOINT}
-
 # Configurar wp-config.php
-sudo -u ubuntu wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
+# sudo -u ubuntu wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
 
 # Instalar WordPress
 sudo -u ubuntu wp core install --url=http://${PRIVATE_IP} --title="Mi WordPress" --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
