@@ -22,7 +22,7 @@ cat <<EOL > /home/ubuntu/duckdns/duck.sh
 echo url="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=" | curl -k -o /dev/null -K -
 EOL
 
-chmod +x /home/ubuntu/duckdns/duck.sh
+chmod 700 /home/ubuntu/duckdns/duck.sh
 (crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | crontab -
 
 # INSTALACION DE CERTBOT
@@ -100,7 +100,7 @@ sudo systemctl enable haproxy
 # VERIFICAR ESTADO DE HAPROXY
 sudo systemctl status haproxy --no-pager
 
- ################
-#  Copiar A wordpress, para configurarlo  
-# sudo scp -i "ssh-mensagl-2025-sebastian.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu             #
- ################
+################
+# Copiar A wordpress, para configurarlo
+# sudo scp -i "ssh-mensagl-2025-sebastian.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
+################
