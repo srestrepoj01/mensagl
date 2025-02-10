@@ -25,7 +25,7 @@ if [ -f "$CERT_PATH" ]; then
     echo "Certificado encontrado. Intentando renovar..."
     sudo certbot renew --non-interactive --quiet
 else
-    echo "No se encontró un certificado existente. Instalando uno nuevo..."
+    echo "No se encontro un certificado existente. Instalando uno nuevo..."
     sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos -m admin@$DUCKDNS_DOMAIN
 fi
 
