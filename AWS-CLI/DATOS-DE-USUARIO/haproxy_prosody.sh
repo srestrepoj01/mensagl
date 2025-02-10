@@ -24,7 +24,7 @@ cat <<EOL > /home/ubuntu/duckdns/duck.sh
 echo url="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=" | curl -k -o /dev/null -K -
 EOL
 
-chmod +x /home/ubuntu/duckdns/duck.sh
+chmod 700 /home/ubuntu/duckdns/duck.sh
 (crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | crontab -
 
 # INSTALACION DE CERTBOT
