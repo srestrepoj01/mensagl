@@ -199,7 +199,7 @@ PRIVATE_IP="10.225.1.10"
 INSTANCE_TYPE="t2.micro"
 VOLUME_SIZE=8
 
-USER_DATA_SCRIPT=$(cat DATOS-DE-USUARIO/haproxy_prosody.sh)
+USER_DATA_SCRIPT=$(cat AWS-DATA-USER/haproxy_prosody.sh)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -220,7 +220,7 @@ INSTANCE_TYPE="t2.micro"
 SECURITY_GROUP_ID="${SG_PROXY_WP_ID}"
 VOLUME_SIZE=8
 
-USER_DATA_SCRIPT=$(cat DATOS-DE-USUARIO/haproxy_wordpress.sh)
+USER_DATA_SCRIPT=$(cat AWS-DATA-USER/haproxy_wordpress.sh)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -244,7 +244,7 @@ SECURITY_GROUP_ID="${SG_MYSQL_ID}"
 PRIVATE_IP="10.225.3.10"
 
 # Cargar el script para la base de datos primaria
-USER_DATA_SCRIPT=$(sed 's/role=".*"/role="primary"/' DATOS-DE-USUARIO/configuracion-bd-primaria-y-slave.sh)
+USER_DATA_SCRIPT=$(sed 's/role=".*"/role="primary"/' AWS-DATA-USER/configuracion-bd-primaria-y-slave.sh)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -263,7 +263,7 @@ INSTANCE_NAME="sgbd_replica-zona1"
 PRIVATE_IP="10.225.3.11"
 
 # Cargar el script para la base de datos secundaria
-USER_DATA_SCRIPT=$(sed 's/role=".*"/role="secondary"/' DATOS-DE-USUARIO/configuracion-bd-primaria-y-slave.sh)
+USER_DATA_SCRIPT=$(sed 's/role=".*"/role="secondary"/' AWS-DATA-USER/configuracion-bd-primaria-y-slave.sh)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
