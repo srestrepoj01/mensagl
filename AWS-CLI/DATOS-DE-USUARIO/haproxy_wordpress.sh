@@ -102,5 +102,5 @@ sudo systemctl status haproxy --no-pager
 
  ################
 #  Copiar A wordpress, para configurarlo  
-# sudo scp -i "ssh-mensagl-2025-sebastian.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.orgubuntu@10.225.4.10:/home/ubuntu             #
+# sudo scp -i "ssh-mensagl-2025-sebastian.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu             #
  ################
