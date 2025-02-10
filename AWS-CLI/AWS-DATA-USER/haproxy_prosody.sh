@@ -21,11 +21,19 @@ exec > >(tee -a $LOG_FILE) 2>&1
 mkdir -p /home/ubuntu/duckdns
 
 cat <<EOL > /home/ubuntu/duckdns/duck.sh
-echo url="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=" | curl -k -o /dev/null -K -
+echo url="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=" | curl -k -o /home/ubuntu/duckdns/duck.log -K -
 EOL
 
 sudo chmod 700 /home/ubuntu/duckdns/duck.sh
+
+# Agregar el cron job para ejecutar el script cada 5 minutos
 (crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | crontab -
+
+# Probar el script
+/home/ubuntu/duckdns/duck.sh
+
+# Verificar el resultado del último intento
+cat /home/ubuntu/duckdns/duck.log
 
 # INSTALACION DE CERTBOT
 sudo apt-get install -y certbot
@@ -40,7 +48,7 @@ fi
 # FUSIONAR ARCHIVOS DE CERTIFICADO
 sudo cat /etc/letsencrypt/live/$DUCKDNS_DOMAIN/fullchain.pem \
 /etc/letsencrypt/live/$DUCKDNS_DOMAIN/privkey.pem \
-| sudo tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
+| sudo tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem > /dev/null
 
 # DAR PERMISOS AL CERTIFICADO
 sudo chmod 644 /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
@@ -103,7 +111,6 @@ backend http_back
     mode http
     balance roundrobin
     server mensajeria3 10.225.3.20:80 check
-
 EOL
 
 # REINICIAR Y HABILITAR HAPROXY
@@ -113,7 +120,7 @@ sudo systemctl enable haproxy
 # VERIFICAR ESTADO DE HAPROXY
 sudo systemctl status haproxy --no-pager
 
- ################
+################
 #  Copiar A prosody, para configurarlo  
 # sudo scp -i "ssh-mensagl-2025-sebastian.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.4.10:/home/ubuntu             #
- ################
+################
