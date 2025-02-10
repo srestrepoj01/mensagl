@@ -3,19 +3,21 @@
 # Variables
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 BACKUP_CFG_PATH="/etc/haproxy/haproxy.cfg.bak"
-# SEBASTIAN
-#DUCKDNS_DOMAIN="srestrepoj-prosody.duckdns.org" # CAMBIAR POR DOMINIO DE PROSODY
-#DUCKDNS_TOKEN="d9c2144c-529b-4781-80b7-20ff1a7595de" # PONER TOKEN DE CUENTA
 
-# DAVID
-DUCKDNS_DOMAIN="mensadavid.duckdns.org" # CAMBIAR POR DOMINIO DE PROSODY
-DUCKDNS_TOKEN="c452df5a-e345-4ab1-bbb4-a4d7d9f75d80" # PONER TOKEN DE CUENTA
+# CONFIGURACION DUCKDNS
+
+# SEBASTIAN
+DUCKDNS_DOMAIN="srestrepoj-prosody.duckdns.org" # CAMBIAR POR DOMINIO DE PROSODY
+DUCKDNS_TOKEN="d9c2144c-529b-4781-80b7-20ff1a7595de" # PONER TOKEN DE CUENTA
 
 SSL_PATH="/etc/letsencrypt/live/$DUCKDNS_DOMAIN"
 CERT_PATH="$SSL_PATH/fullchain.pem"
+LOG_FILE="/var/log/script.log"
+
+# Redirigir toda la salida a LOG_FILE
+exec > >(tee -a $LOG_FILE) 2>&1
 
 # CONFIGURAR DUCKDNS
-echo "Instalando y configurando DuckDNS..."
 mkdir -p /home/ubuntu/duckdns
 
 cat <<EOL > /home/ubuntu/duckdns/duck.sh
@@ -25,27 +27,34 @@ EOL
 chmod +x /home/ubuntu/duckdns/duck.sh
 (crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | crontab -
 
+# INSTALACION DE CERTBOT
+sudo apt-get install -y certbot
+
 # CONFIGURACION DE LET'S ENCRYPT (Certbot)
-echo "Verificando si el certificado SSL ya existe..."
 if [ -f "$CERT_PATH" ]; then
-    echo "Certificado encontrado. Intentando renovar..."
     sudo certbot renew --non-interactive --quiet
 else
-    echo "No se encontro un certificado existente. Instalando uno nuevo..."
     sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos -m admin@$DUCKDNS_DOMAIN
 fi
 
+# FUSIONAR ARCHIVOS DE CERTIFICADO
+sudo cat /etc/letsencrypt/live/$DUCKDNS_DOMAIN/fullchain.pem \
+/etc/letsencrypt/live/$DUCKDNS_DOMAIN/privkey.pem \
+| sudo tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
+
+# DAR PERMISOS AL CERTIFICADO
+sudo chmod 644 /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
+sudo chmod 755 -R /etc/letsencrypt/live/$DUCKDNS_DOMAIN
+sudo chmod 755 /etc/letsencrypt/live/
+
 # INSTALACION DE HAPROXY
-echo "Instalando HAProxy..."
 sudo apt-get update
 sudo apt-get install -y haproxy
 
 # COPIA DE SEGURIDAD DE LA CONFIGURACION INICIAL
-echo "Realizando backup de la configuración actual..."
 sudo cp "$HAPROXY_CFG_PATH" "$BACKUP_CFG_PATH"
 
 # CONFIGURACION DE HAPROXY
-echo "Aplicando nueva configuración de HAProxy..."
 sudo tee "$HAPROXY_CFG_PATH" > /dev/null <<EOL
 global
     log /dev/log    local0
@@ -98,10 +107,8 @@ backend http_back
 EOL
 
 # REINICIAR Y HABILITAR HAPROXY
-echo "Reiniciando HAProxy..."
 sudo systemctl restart haproxy
 sudo systemctl enable haproxy
 
 # VERIFICAR ESTADO DE HAPROXY
-echo "Estado de HAProxy:"
 sudo systemctl status haproxy --no-pager
