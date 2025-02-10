@@ -3,8 +3,16 @@
 # Variables
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 BACKUP_CFG_PATH="/etc/haproxy/haproxy.cfg.bak"
-DUCKDNS_DOMAIN="srestrepoj-wordpress.duckdns.org"  # CAMBIAR POR DOMINIO DE WORDPRESS
-DUCKDNS_TOKEN="d9c2144c-529b-4781-80b7-20ff1a7595de" # PONER TOKEN DE CUENTA
+
+# SEBASTIAN
+#DUCKDNS_DOMAIN="srestrepoj-wordpress.duckdns.org"  # CAMBIAR POR DOMINIO DE WORDPRESS
+#DUCKDNS_TOKEN="d9c2144c-529b-4781-80b7-20ff1a7595de" # PONER TOKEN DE CUENTA
+
+# DAVID
+# DAVID
+DUCKDNS_DOMAIN="worpressdavid.duckdns.org" # CAMBIAR POR DOMINIO DE PROSODY
+DUCKDNS_TOKEN="c452df5a-e345-4ab1-bbb4-a4d7d9f75d80" # PONER TOKEN DE CUENTA
+
 SSL_PATH="/etc/letsencrypt/live/$DUCKDNS_DOMAIN"
 CERT_PATH="$SSL_PATH/fullchain.pem"
 
