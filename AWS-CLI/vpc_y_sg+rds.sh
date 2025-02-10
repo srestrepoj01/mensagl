@@ -88,12 +88,21 @@ aws ec2 associate-route-table --subnet-id "$SUBNET_PRIVATE2_ID" --route-table-id
 # Crear Grupos de Seguridad  #
 ##############################
 
-# Grupo de seguridad para los Proxy Inversos
-SG_PROXY_ID=$(aws ec2 create-security-group --group-name "sg_proxy_inverso" --description "SG para el proxy inverso" --vpc-id "$VPC_ID" --query 'GroupId' --output text)
-aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_ID" --protocol tcp --port 22 --cidr "0.0.0.0/0"
-aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_ID" --protocol tcp --port 443 --cidr "0.0.0.0/0"
-aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_ID" --protocol tcp --port 8448 --cidr "0.0.0.0/0"
-aws ec2 authorize-security-group-egress --group-id "$SG_PROXY_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
+# Grupo de seguridad para los Proxy Inversos - Wordpress
+SG_PROXY_WP_ID=$(aws ec2 create-security-group --group-name "sg_proxy_inverso-WP" --description "SG para el proxy inverso - wordpress" --vpc-id "$VPC_ID" --query 'GroupId' --output text)
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_WP_ID" --protocol tcp --port 22 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_WP_ID" --protocol tcp --port 443 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_WP_ID" --protocol tcp --port 80 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-egress --group-id "$SG_PROXY_WP_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
+
+# Grupo de seguridad para los Proxy Inversos - Prosody
+SG_PROXY_PROSODY_ID=$(aws ec2 create-security-group --group-name "sg_proxy_inverso-Prosody" --description "SG para el proxy inverso - prosody" --vpc-id "$VPC_ID" --query 'GroupId' --output text)
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 22 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 5222 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 5269 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 443 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 80 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-egress --group-id  "$SG_PROXY_PROSODY_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
 
 # Grupo de seguridad para el CMS
 SG_CMS_ID=$(aws ec2 create-security-group --group-name "sg_cms" --description "SG para el cluster CMS" --vpc-id "$VPC_ID" --query 'GroupId' --output text)
@@ -185,7 +194,7 @@ echo "RDS Endpoint: $RDS_ENDPOINT"
 # proxy-prosody
 INSTANCE_NAME="proxy-prosody"
 SUBNET_ID="${SUBNET_PUBLIC1_ID}"
-SECURITY_GROUP_ID="${SG_PROXY_ID}"
+SECURITY_GROUP_ID="${SG_PROXY_PROSODY_ID}"
 PRIVATE_IP="10.225.1.10"
 INSTANCE_TYPE="t2.micro"
 VOLUME_SIZE=8
@@ -203,10 +212,11 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --output text)
 echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
-# PROXY-2
+# proxy-wordpress
 INSTANCE_NAME="proxy-wordpress"
 SUBNET_ID="${SUBNET_PUBLIC2_ID}"
 PRIVATE_IP="10.225.2.10"
+SECURITY_GROUP_ID="${SG_PROXY_WP_ID}"
 
 USER_DATA_SCRIPT=$(cat DATOS-DE-USUARIO/haproxy_wordpress.sh)
 
@@ -221,6 +231,7 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --query "Instances[0].InstanceId" \
     --output text)
 echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+
 ##############
 #    MySQL   #
 ##############
