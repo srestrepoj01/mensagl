@@ -34,7 +34,7 @@ sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 cat /home/ubuntu/duckdns/duck.log
 
 # INSTALACION DE CERTBOT
-sudo apt-get install -y certbot
+sudo apt update && sudo  DEBIAN_FRONTEND=noninteractive apt install certbot -y
 
 # CONFIGURACION DE LET'S ENCRYPT (Certbot)
 if [ -f "$CERT_PATH" ]; then
