@@ -27,7 +27,7 @@ sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 # Probar el script
 sudo /home/ubuntu/duckdns/duck.sh
 
-# Verificar el resultado del último intento
+# Verificar el resultado del ultimo intento
 sudo cat /home/ubuntu/duckdns/duck.log
 
 # INSTALACION DE CERTBOT
