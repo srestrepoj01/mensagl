@@ -12,18 +12,24 @@ LOG_FILE="laboratorio.log"
 # Variables VPC
 read -r -p "Pon el nombre del laboratorio: " NOMBRE_ALUMNO
 REGION="us-east-1"
-
 # Variables AMI-ID (Ubuntu server 24.04) y CLAVE SSH
 KEY_NAME="ssh-mensagl-2025-${NOMBRE_ALUMNO}"
 AMI_ID="ami-04b4f1a9cf54c11d0" # Llamar variable claves         
 
-# Crear par de claves SSH
-aws ec2 create-key-pair \
+# Crear par de claves SSH y almacenar la clave en una variable
+PEM_KEY=$(aws ec2 create-key-pair \
     --key-name "${KEY_NAME}" \
     --query "KeyMaterial" \
-    --output text > "${KEY_NAME}.pem"
+    --output text)
+
+# Guardar la clave en un archivo
+echo "${PEM_KEY}" > "${KEY_NAME}.pem"
 chmod 400 "${KEY_NAME}.pem"
-echo "Clave SSH creada: ${KEY_NAME}.pem"
+echo "Clave SSH creada y almacenada en: ${KEY_NAME}.pem"
+
+# Usar la variable PEM_KEY en otros comandos
+echo "Contenido de la clave SSH almacenada en variable:"
+echo "${PEM_KEY}"
 
 
 # Variables para RDS, se pueden cambiar los valores por los deseados
