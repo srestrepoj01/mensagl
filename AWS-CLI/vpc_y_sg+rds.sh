@@ -34,7 +34,7 @@ echo "${PEM_KEY}"
 
 # Variables para RDS, se pueden cambiar los valores por los deseados
 RDS_INSTANCE_ID="wordpress-db"
-read -r -p "Ingrese el nombre de la base de datos: " DB_NAME
+read -r -p "Ingrese el nombre de la instancia RDS / BD: " DB_NAME
 read -r -p "Ingrese el nombre de usuario de la BD: " DB_USERNAME
 read -r -p "Ingrese la contraseña de la BD: " DB_PASSWORD
 
@@ -229,7 +229,7 @@ VOLUME_SIZE=8
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
 # CAMBIAR LINK DE DESCARGA
-sudo curl -o /home/ubuntu/setup.sh https://raw.githubusercontent.com/srestrepoj01/mensagl/refs/heads/main/AWS-CLI/AWS-DATA-USER/pruebas_haproxy-wordpress.sh
+sudo curl -o /home/ubuntu/setup.sh https://raw.githubusercontent.com/srestrepoj01/mensagl/refs/heads/main/AWS-CLI/AWS-DATA-USER/haproxy_wordpress.sh
 sudo chown ubuntu:ubuntu setup.sh
 sudo chmod +x /home/ubuntu/setup.sh
 sudo bash /home/ubuntu/setup.sh
@@ -385,6 +385,7 @@ wait_for_db
 # Actualizar e instalar dependencias necesarias
 log "Actualizando paquetes e instalando dependencias..."
 sudo apt update
+sudo add-apt-repository universe -y
 sudo apt install -y apache2 mysql-client php php-mysql libapache2-mod-php php-curl php-xml php-mbstring php-zip curl git unzip
 
 # Instalar WP-CLI
