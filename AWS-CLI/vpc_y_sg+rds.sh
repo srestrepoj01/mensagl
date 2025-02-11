@@ -401,8 +401,6 @@ sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "SuperSecretPass"
 echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
 EOF
 )
-
-
  INSTANCE_ID=$(aws ec2 run-instances \
      --image-id "$AMI_ID" \
      --instance-type "$INSTANCE_TYPE" \
