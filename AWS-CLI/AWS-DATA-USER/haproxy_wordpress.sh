@@ -25,6 +25,7 @@ sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 (sudo crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | sudo crontab -
 
 # Probar el script
+sudo chmod +x /home/ubuntu/duckdns/duck.sh
 sudo /home/ubuntu/duckdns/duck.sh
 
 # Verificar el resultado del ultimo intento

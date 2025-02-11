@@ -30,6 +30,9 @@ sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 # Agregar el cron job para ejecutar el script cada 5 minutos
 (crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | crontab -
 
+# Probar el script
+sudo chmod +x /home/ubuntu/duckdns/duck.sh
+sudo /home/ubuntu/duckdns/duck.sh
 
 # Verificar el resultado del último intento
 cat /home/ubuntu/duckdns/duck.log
