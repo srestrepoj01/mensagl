@@ -1,52 +1,47 @@
 #!/bin/bash
-
 # Variables
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 BACKUP_CFG_PATH="/etc/haproxy/haproxy.cfg.bak"
-
-# SEBASTIAN
 DUCKDNS_DOMAIN="srestrepoj-wordpress.duckdns.org"  # CAMBIAR POR DOMINIO DE WORDPRESS
 DUCKDNS_TOKEN="d9c2144c-529b-4781-80b7-20ff1a7595de" # PONER TOKEN DE CUENTA
-
 SSL_PATH="/etc/letsencrypt/live/$DUCKDNS_DOMAIN"
 CERT_PATH="$SSL_PATH/fullchain.pem"
 LOG_FILE="/var/log/script.log"
 
 # Redirigir toda la salida a LOG_FILE
-exec > >(tee -a $LOG_FILE) 2>&1
+exec > >(sudo tee -a $LOG_FILE) 2>&1
 
 # CONFIGURACION DUCKDNS
-mkdir -p /home/ubuntu/duckdns
+sudo mkdir -p /home/ubuntu/duckdns
 
-cat <<EOL > /home/ubuntu/duckdns/duck.sh
+sudo cat <<EOL > /home/ubuntu/duckdns/duck.sh
 echo url="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=" | curl -k -o /home/ubuntu/duckdns/duck.log -K -
 EOL
 
+sudo chown ubuntu:ubuntu /home/ubuntu/duckdns/duck.sh
 sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 
 # Agregar el cron job para ejecutar el script cada 5 minutos
-(crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | crontab -
+(sudo crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | sudo crontab -
 
 # Probar el script
-/home/ubuntu/duckdns/duck.sh
+sudo /home/ubuntu/duckdns/duck.sh
 
-# Verificar el resultado del último intento
-cat /home/ubuntu/duckdns/duck.log
+# Verificar el resultado del ultimo intento
+sudo cat /home/ubuntu/duckdns/duck.log
 
 # INSTALACION DE CERTBOT
-sudo apt update && sudo  DEBIAN_FRONTEND=noninteractive apt install certbot -y
+sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot
 
 # CONFIGURACION DE LET'S ENCRYPT (Certbot)
 if [ -f "$CERT_PATH" ]; then
     sudo certbot renew --non-interactive --quiet
 else
-    sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos -m admin@$DUCKDNS_DOMAIN
+    sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos --email srestrepoj01@educantabria.es
 fi
 
 # FUSIONAR ARCHIVOS DE CERTIFICADO
-sudo cat /etc/letsencrypt/live/$DUCKDNS_DOMAIN/fullchain.pem \
-/etc/letsencrypt/live/$DUCKDNS_DOMAIN/privkey.pem \
-| sudo tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem > /dev/null
+sudo cat /etc/letsencrypt/live/$DUCKDNS_DOMAIN/fullchain.pem /etc/letsencrypt/live/$DUCKDNS_DOMAIN/privkey.pem | sudo tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem > /dev/null
 
 # DAR PERMISOS AL CERTIFICADO
 sudo chmod 644 /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
@@ -107,8 +102,3 @@ sudo systemctl enable haproxy
 
 # VERIFICAR ESTADO DE HAPROXY
 sudo systemctl status haproxy --no-pager
-
-################
-# Copiar A wordpress, para configurarlo
-# sudo scp -i "ssh-mensagl-2025-sebastian.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
-################
