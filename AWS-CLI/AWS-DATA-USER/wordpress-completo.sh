@@ -9,12 +9,24 @@ WP_URL="https://srestrepoj-wordpress.duckdns.org"
 ROLE_NAME="cliente_soporte"
 SSL_CERT="/home/ubuntu/srestrepoj-wordpress.duckdns.org/fullchain.pem"
 SSL_KEY="/home/ubuntu/srestrepoj-wordpress.duckdns.org/privkey.pem"
-LOG_FILE="/var/log/wp_installation.log"
-
-# Función para registrar mensajes
+LOG_FILE="/var/log/wp_install.log"
+# Funcion para registrar mensajes
 log() {
     echo "$1" | tee -a "$LOG_FILE"
 }
+
+# Funcion para esperar a que la base de datos esté disponible
+wait_for_db() {
+    log "Esperando a que la base de datos estE disponible en $RDS_ENDPOINT..."
+    while ! mysql -h "$RDS_ENDPOINT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" &>/dev/null; do
+        log "Base de datos no disponible, esperando 10 segundos..."
+        sleep 10
+    done
+    log "Base de datos disponible!"
+}
+
+# Esperar a que la base de datos esté disponible
+wait_for_db
 
 # Actualizar e instalar dependencias necesarias
 log "Actualizando paquetes e instalando dependencias..."
@@ -33,6 +45,15 @@ sudo rm -rf /var/www/html/*
 sudo chmod -R 755 /var/www/html
 sudo chown -R ubuntu:ubuntu /var/www/html
 
+# Crear base de datos y usuario, si no existen
+log "Creando base de datos y usuario (si no existe)..."
+mysql -h $RDS_ENDPOINT -u $DB_USERNAME -p$DB_PASSWORD <<EOF
+CREATE DATABASE IF NOT EXISTS $DB_NAME;
+CREATE USER IF NOT EXISTS '$DB_USERNAME'@'%' IDENTIFIED BY '$DB_PASSWORD';
+GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USERNAME'@'%';
+FLUSH PRIVILEGES;
+EOF
+
 # Descargar WordPress
 log "Descargando WordPress..."
 wp core download --path=/var/www/html
@@ -42,11 +63,11 @@ rm -f /var/www/html/wp-config.php
 
 # Configurar wp-config.php
 log "Configurando wp-config.php..."
-wp core config --dbname="${DB_NAME}" --dbuser="${DB_USERNAME}" --dbpass="${DB_PASSWORD}" --dbhost="${RDS_ENDPOINT}" --dbprefix=wp_ --path=/var/www/html
+wp core config --dbname="$DB_NAME" --dbuser="$DB_USERNAME" --dbpass="$DB_PASSWORD" --dbhost="$RDS_ENDPOINT" --dbprefix=wp_ --path=/var/www/html
 
 # Instalar WordPress
 log "Instalando WordPress..."
-wp core install --url="$WP_URL" --title="CMS - TICKETING" --admin_user="${DB_USERNAME}" --admin_password="${DB_PASSWORD}" --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
+wp core install --url="$WP_URL" --title="CMS - TICKETING" --admin_user="$DB_USERNAME" --admin_password="$DB_PASSWORD" --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
 
 # Instalar plugins adicionales
 log "Instalando plugins..."
