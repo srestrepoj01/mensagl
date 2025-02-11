@@ -114,6 +114,12 @@ backend http_back
     mode http
     balance roundrobin
     server mensajeria4 10.225.3.20:80 check
+
+backend db_back
+    mode tcp
+    balance roundrobin
+    server db_primary 10.225.3.10:3306 check
+    server db_secondary 10.225.3.11:3306 check backup
 EOL
 
 # REINICIAR Y HABILITAR HAPROXY
