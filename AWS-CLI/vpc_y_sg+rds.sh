@@ -246,8 +246,9 @@ sudo mkdir -p /home/ubuntu/duckdns
 
 sudo cat <<EOL > /home/ubuntu/duckdns/duck.sh
 echo url="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=" | curl -k -o /home/ubuntu/duckdns/duck.log -K -
+EOL
 
-
+sudo chown ubuntu:ubuntu /home/ubuntu/duckdns/duck.sh
 sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 
 # Agregar el cron job para ejecutar el script cada 5 minutos
@@ -270,9 +271,7 @@ else
 fi
 
 # FUSIONAR ARCHIVOS DE CERTIFICADO
-sudo cat /etc/letsencrypt/live/$DUCKDNS_DOMAIN/fullchain.pem \
-/etc/letsencrypt/live/$DUCKDNS_DOMAIN/privkey.pem \
-| sudo tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem > /dev/null
+sudo cat /etc/letsencrypt/live/$DUCKDNS_DOMAIN/fullchain.pem /etc/letsencrypt/live/$DUCKDNS_DOMAIN/privkey.pem | sudo tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem > /dev/null
 
 # DAR PERMISOS AL CERTIFICADO
 sudo chmod 644 /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
@@ -325,6 +324,7 @@ backend wordpress_back
     mode http
     balance roundrobin
     server wordpress1 10.225.4.10:80 check
+EOL
 
 # REINICIAR Y HABILITAR HAPROXY
 sudo systemctl restart haproxy
@@ -339,7 +339,7 @@ sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
 sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
 
 # Copiar A wordpress, para configurarlo
-sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/$DUCKDNS_DOMAIN ubuntu@10.225.4.10:/home/ubuntu
 EOF
 )
 

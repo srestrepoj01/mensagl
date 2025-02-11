@@ -1,4 +1,4 @@
-USER_DATA_SCRIPT=$(cat <<EOF
+
 #!/bin/bash
 
 # Variables
@@ -11,55 +11,54 @@ CERT_PATH="$SSL_PATH/fullchain.pem"
 LOG_FILE="/var/log/script.log"
 
 # Redirigir toda la salida a LOG_FILE
-exec > >(tee -a $LOG_FILE) 2>&1
+exec > >(sudo tee -a $LOG_FILE) 2>&1
 
 # CONFIGURACION DUCKDNS
-mkdir -p /home/ubuntu/duckdns
+sudo mkdir -p /home/ubuntu/duckdns
 
-cat <<EOL > /home/ubuntu/duckdns/duck.sh
+sudo cat <<EOL > /home/ubuntu/duckdns/duck.sh
 echo url="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=" | curl -k -o /home/ubuntu/duckdns/duck.log -K -
 EOL
 
-chmod 700 /home/ubuntu/duckdns/duck.sh
+sudo chown ubuntu:ubuntu /home/ubuntu/duckdns/duck.sh
+sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 
 # Agregar el cron job para ejecutar el script cada 5 minutos
-(crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | crontab -
+(sudo crontab -l 2>/dev/null; echo "*/5 * * * * /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1") | sudo crontab -
 
 # Probar el script
-/home/ubuntu/duckdns/duck.sh
+sudo /home/ubuntu/duckdns/duck.sh
 
 # Verificar el resultado del último intento
-cat /home/ubuntu/duckdns/duck.log
+sudo cat /home/ubuntu/duckdns/duck.log
 
 # INSTALACION DE CERTBOT
-apt update && DEBIAN_FRONTEND=noninteractive apt install certbot -y
+sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install certbot -y
 
 # CONFIGURACION DE LET'S ENCRYPT (Certbot)
 if [ -f "$CERT_PATH" ]; then
-    certbot renew --non-interactive --quiet
+    sudo certbot renew --non-interactive --quiet
 else
-    certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos -m admin@$DUCKDNS_DOMAIN
+    sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos -m admin@$DUCKDNS_DOMAIN
 fi
 
 # FUSIONAR ARCHIVOS DE CERTIFICADO
-cat /etc/letsencrypt/live/$DUCKDNS_DOMAIN/fullchain.pem \
-/etc/letsencrypt/live/$DUCKDNS_DOMAIN/privkey.pem \
-| tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem > /dev/null
+sudo cat /etc/letsencrypt/live/$DUCKDNS_DOMAIN/fullchain.pem /etc/letsencrypt/live/$DUCKDNS_DOMAIN/privkey.pem | sudo tee /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem > /dev/null
 
 # DAR PERMISOS AL CERTIFICADO
-chmod 644 /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
-chmod 755 -R /etc/letsencrypt/live/$DUCKDNS_DOMAIN
-chmod 755 /etc/letsencrypt/live/
+sudo chmod 644 /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
+sudo chmod 755 -R /etc/letsencrypt/live/$DUCKDNS_DOMAIN
+sudo chmod 755 /etc/letsencrypt/live/
 
 # INSTALACION DE HAPROXY
-apt-get update
-apt-get install -y haproxy
+sudo apt-get update
+sudo apt-get install -y haproxy
 
 # HACER COPIA DE SEGURIDAD DE LA CONFIGURACION INICIAL
-cp "$HAPROXY_CFG_PATH" "$BACKUP_CFG_PATH"
+sudo cp "$HAPROXY_CFG_PATH" "$BACKUP_CFG_PATH"
 
 # CONFIGURAR HAPROXY
-tee "$HAPROXY_CFG_PATH" > /dev/null <<EOL
+sudo tee "$HAPROXY_CFG_PATH" > /dev/null <<EOL
 global
     log /dev/log    local0
     log /dev/log    local1 notice
@@ -100,18 +99,16 @@ backend wordpress_back
 EOL
 
 # REINICIAR Y HABILITAR HAPROXY
-systemctl restart haproxy
-systemctl enable haproxy
+sudo systemctl restart haproxy
+sudo systemctl enable haproxy
 
 # VERIFICAR ESTADO DE HAPROXY
-systemctl status haproxy --no-pager
+sudo systemctl status haproxy --no-pager
 
 # Configurar la clave SSH
-mkdir -p /home/ubuntu/.ssh
-echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
-chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo mkdir -p /home/ubuntu/.ssh
+sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
 
 # Copiar A wordpress, para configurarlo
-# scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
-EOF
-)
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/$DUCKDNS_DOMAIN ubuntu@10.225.4.10:/home/ubuntu
