@@ -311,21 +311,24 @@ SUBNET_ID="${SUBNET_PRIVATE1_ID}"
 SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
 PRIVATE_IP="10.225.3.20"
 
-#USER_DATA_SCRIPT=$(cat <<EOF
-#EOF
-#)
+USER_DATA_SCRIPT=$(cat <<EOF
 
-# INSTANCE_ID=$(aws ec2 run-instances \
-#     --image-id "$AMI_ID" \
-#     --instance-type "$INSTANCE_TYPE" \
-#     --key-name "$KEY_NAME" \
-#     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
-#     --network-interfaces "SubnetId=$SUBNET_ID,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
-#     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
-#     --user-data "$USER_DATA_SCRIPT" \
-#     --query "Instances[0].InstanceId" \
-#     --output text)
-# echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+
+
+EOF
+)
+
+ INSTANCE_ID=$(aws ec2 run-instances \
+     --image-id "$AMI_ID" \
+     --instance-type "$INSTANCE_TYPE" \
+     --key-name "$KEY_NAME" \
+     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+     --network-interfaces "SubnetId=$SUBNET_ID,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+     --user-data "$USER_DATA_SCRIPT" \
+     --query "Instances[0].InstanceId" \
+     --output text)
+ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 # # mensajeria-2
 # INSTANCE_NAME="mensajeria-2"
