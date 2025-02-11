@@ -7,8 +7,8 @@
 WP_PATH="/var/www/html"
 WP_URL="https://srestrepoj-wordpress.duckdns.org"
 ROLE_NAME="cliente_soporte"
-SSL_CERT="/home/ubuntu/srestrepoj-wordpress.duckdns.org/fullchain.pem"
-SSL_KEY="/home/ubuntu/srestrepoj-wordpress.duckdns.org/privkey.pem"
+SSL_CERT="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/fullchain.pem"
+SSL_KEY="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/privkey.pem"
 LOG_FILE="/var/log/wp_install.log"
 # Funcion para registrar mensajes
 log() {
@@ -17,7 +17,7 @@ log() {
 
 # Funcion para esperar a que la base de datos esté disponible
 wait_for_db() {
-    log "Esperando a que la base de datos estE disponible en $RDS_ENDPOINT..."
+    log "Esperando a que la base de datos este disponible en $RDS_ENDPOINT..."
     while ! mysql -h "$RDS_ENDPOINT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" &>/dev/null; do
         log "Base de datos no disponible, esperando 10 segundos..."
         sleep 10
@@ -31,6 +31,7 @@ wait_for_db
 # Actualizar e instalar dependencias necesarias
 log "Actualizando paquetes e instalando dependencias..."
 sudo apt update
+sudo add-apt-repository universe -y
 sudo apt install -y apache2 mysql-client php php-mysql libapache2-mod-php php-curl php-xml php-mbstring php-zip curl git unzip
 
 # Instalar WP-CLI
@@ -52,7 +53,6 @@ CREATE DATABASE IF NOT EXISTS $DB_NAME;
 CREATE USER IF NOT EXISTS '$DB_USERNAME'@'%' IDENTIFIED BY '$DB_PASSWORD';
 GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USERNAME'@'%';
 FLUSH PRIVILEGES;
-EOF
 
 # Descargar WordPress
 log "Descargando WordPress..."

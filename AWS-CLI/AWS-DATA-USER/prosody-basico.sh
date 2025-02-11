@@ -28,7 +28,7 @@ check_instance_status "10.225.3.11"
 # Instalación de Prosody
 echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
 sudo apt update
-sudo apt install -y prosody prosody-modules lua-dbi-mysql lua-event
+sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
 
 # Configurar Prosody
 echo "Configurando Prosody..." | tee -a $LOG_FILE
@@ -83,6 +83,6 @@ sudo systemctl restart prosody
 
 # Crear usuario administrador
 echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
-sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "SuperSecretPass"
+sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
 
 echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
