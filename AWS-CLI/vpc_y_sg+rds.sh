@@ -574,7 +574,6 @@ sudo a2enmod rewrite ssl
 sudo systemctl restart apache2
 
 log "¡Instalación completada! Accede a tu WordPress en: $WP_URL"
-
 EOF
 )
 
