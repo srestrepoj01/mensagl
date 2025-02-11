@@ -220,8 +220,10 @@ sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
 sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
 sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
 
-# Copiar A prosody, para configurarlo
+# Copiar A prosody, para configurarlo en ambas instancias del cluster
 sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.3.20:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.3.30:/home/ubuntu
+
 EOF
 )
 INSTANCE_ID=$(aws ec2 run-instances \
@@ -257,8 +259,9 @@ sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
 sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
 sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
 
-# Copiar A wordpress, para configurarlo
+# Copiar A wordpress, para configurarlo, en ambas instancias del cluster
 sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.11:/home/ubuntu
 EOF
 )
 
@@ -358,7 +361,7 @@ check_instance_status "10.225.3.11"
 # Instalación de Prosody
 echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
 sudo apt update
-sudo apt install -y prosody prosody-modules lua-dbi-mysql lua-event
+sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
 
 # Configurar Prosody
 echo "Configurando Prosody..." | tee -a $LOG_FILE
@@ -430,20 +433,113 @@ EOF
      --output text)
  echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
-# # mensajeria-2
-# INSTANCE_NAME="mensajeria-2"
-# PRIVATE_IP="10.225.3.30"
+# mensajeria-2
+INSTANCE_NAME="mensajeria-2"
+SUBNET_ID="${SUBNET_PRIVATE1_ID}"
+SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
+PRIVATE_IP="10.225.3.30"
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+# Instalación de Prosody y configuración de base de datos MySQL externa.
 
-# INSTANCE_ID=$(aws ec2 run-instances \
-#     --image-id "$AMI_ID" \
-#     --instance-type "$INSTANCE_TYPE" \
-#     --key-name "$KEY_NAME" \
-#     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
-#     --network-interfaces "SubnetId=$SUBNET_ID,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
-#     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
-#     --query "Instances[0].InstanceId" \
-#     --output text)
-# echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+# Variables
+db_host="10.225.3.10"
+db_user="admin"
+db_password="Admin123"
+db_name="prosody"
+
+LOG_FILE="/var/log/setup_script.log"
+
+# Función para verificar que una instancia esté activa y en funcionamiento
+check_instance_status() {
+    instance_ip=$1
+    status=$(aws ec2 describe-instance-status --instance-ids "$instance_ip" --query "InstanceStatuses[0].InstanceState.Name" --output text)
+    while [ "$status" != "running" ]; do
+        echo "Esperando a que la instancia con IP $instance_ip esté activa..." | tee -a $LOG_FILE
+        sleep 10
+        status=$(aws ec2 describe-instance-status --instance-ids "$instance_ip" --query "InstanceStatuses[0].InstanceState.Name" --output text)
+    done
+    echo "La instancia con IP $instance_ip está en funcionamiento." | tee -a $LOG_FILE
+}
+
+# Verificar el estado de las instancias de la base de datos
+check_instance_status "10.225.3.10"
+check_instance_status "10.225.3.11"
+
+# Instalación de Prosody
+echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
+sudo apt update
+sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
+
+# Configurar Prosody
+echo "Configurando Prosody..." | tee -a $LOG_FILE
+sudo tee /etc/prosody/prosody.cfg.lua > /dev/null <<EOL
+-- Prosody Configuration
+
+VirtualHost "srestrepoj-prosody.duckdns.org"
+admins = { "admin@srestrepoj-prosody.duckdns.org" }
+
+modules_enabled = {
+    "roster";
+    "saslauth";
+    "tls";
+    "dialback";
+    "disco";
+    "posix";
+    "private";
+    "vcard";
+    "version";
+    "uptime";
+    "time";
+    "ping";
+    "register";
+    "admin_adhoc";
+}
+
+allow_registration = true
+daemonize = true
+pidfile = "/var/run/prosody/prosody.pid"
+c2s_require_encryption = true
+s2s_require_encryption = true
+
+log = {
+    info = "/var/log/prosody/prosody.log";
+    error = "/var/log/prosody/prosody.err";
+    "*syslog";
+}
+
+storage = "sql"
+sql = {
+    driver = "MySQL";
+    database = "$db_name";
+    username = "$db_user";
+    password = "$db_password";
+    host = "$db_host";
+}
+EOL
+
+# Reiniciar Prosody
+echo "Reiniciando Prosody..." | tee -a $LOG_FILE
+sudo systemctl restart prosody
+
+# Crear usuario administrador
+echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
+sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
+
+echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
+EOF
+)
+ INSTANCE_ID=$(aws ec2 run-instances \
+     --image-id "$AMI_ID" \
+     --instance-type "$INSTANCE_TYPE" \
+     --key-name "$KEY_NAME" \
+     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+     --network-interfaces "SubnetId=$SUBNET_ID,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+     --user-data "$USER_DATA_SCRIPT" \
+     --query "Instances[0].InstanceId" \
+     --output text)
+ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 ##############
 # WORDPRESS  #
@@ -464,8 +560,8 @@ USER_DATA_SCRIPT=$(cat <<EOF
 WP_PATH="/var/www/html"
 WP_URL="https://srestrepoj-wordpress.duckdns.org"
 ROLE_NAME="cliente_soporte"
-SSL_CERT="/home/ubuntu/srestrepoj-wordpress.duckdns.org/fullchain.pem"
-SSL_KEY="/home/ubuntu/srestrepoj-wordpress.duckdns.org/privkey.pem"
+SSL_CERT="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/fullchain.pem"
+SSL_KEY="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/privkey.pem"
 LOG_FILE="/var/log/wp_install.log"
 # Funcion para registrar mensajes
 log() {
@@ -589,49 +685,143 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --output text)
 echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
-# # soporte-2
-# INSTANCE_NAME="soporte-2"
-# SUBNET_ID="${SUBNET_PRIVATE2_ID}"
-# SECURITY_GROUP_ID="${SG_CMS_ID}"
-# PRIVATE_IP="10.225.4.11"
+# soporte-2
+INSTANCE_NAME="soporte-2"
+SUBNET_ID="${SUBNET_PRIVATE2_ID}"
+SECURITY_GROUP_ID="${SG_CMS_ID}"
+PRIVATE_IP="10.225.4.11"
 
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/#!/bin/bash
-# set -e
-# sudo apt update
-# sudo apt install apache2 mysql-client mysql-server php php-mysql -y
-# curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-# chmod +x wp-cli.phar
-# sudo mv wp-cli.phar /usr/local/bin/wp
-# sudo rm -rf /var/www/html/*
-# sudo chmod -R 755 /var/www/html
-# sudo chown -R ubuntu:ubuntu /var/www/html
-# # MySQL credentials
-# MYSQL_CMD="mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD}"
-# $MYSQL_CMD <<EOF2
-# CREATE DATABASE IF NOT EXISTS ${DB_NAME};
-# CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
-# GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';
-# FLUSH PRIVILEGES;
-# EOF2
-# sudo -u ubuntu -k -- wp core download --path=/var/www/html
-# sudo -u ubuntu -k -- wp core config --dbname=${DB_NAME} --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp_ --path=/var/www/html
-# sudo -u ubuntu -k -- wp core install --url=10.225.4.100  --title=Site_Title --admin_user=${DB_USERNAME} --admin_password=${DB_PASSWORD} --admin_email=majam02@educantabria.es --path=/var/www/html
-# #sudo -u ubuntu -k -- wp option update home 'http://10.225.4.10' --path=/var/www/html
-# #sudo -u ubuntu -k -- wp option update siteurl 'http://10.225.4.10' --path=/var/www/html
-# sudo -u ubuntu -k -- wp plugin install supportcandy --activate --path=/var/www/html
-# echo "WP configurado / montado"
-# EOF
-# )
-# INSTANCE_ID=$(aws ec2 run-instances \
-#     --image-id "$AMI_ID" \
-#     --instance-type "$INSTANCE_TYPE" \
-#     --key-name "$KEY_NAME" \
-#     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
-#     --network-interfaces "SubnetId=$SUBNET_ID,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
-#     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
-#     --user-data "$USER_DATA_SCRIPT" \
-#     --query "Instances[0].InstanceId" \
-#     --output text)
-# echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+##############################
+#  INSTALACION WP / PLUGINS  #
+##############################
 
+# Variables
+WP_PATH="/var/www/html"
+WP_URL="https://srestrepoj-wordpress.duckdns.org"
+ROLE_NAME="cliente_soporte"
+SSL_CERT="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/fullchain.pem"
+SSL_KEY="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/privkey.pem"
+LOG_FILE="/var/log/wp_install.log"
+# Funcion para registrar mensajes
+log() {
+    echo "$1" | tee -a "$LOG_FILE"
+}
+
+# Funcion para esperar a que la base de datos esté disponible
+wait_for_db() {
+    log "Esperando a que la base de datos este disponible en $RDS_ENDPOINT..."
+    while ! mysql -h "$RDS_ENDPOINT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" &>/dev/null; do
+        log "Base de datos no disponible, esperando 10 segundos..."
+        sleep 10
+    done
+    log "Base de datos disponible!"
+}
+
+# Esperar a que la base de datos esté disponible
+wait_for_db
+
+# Actualizar e instalar dependencias necesarias
+log "Actualizando paquetes e instalando dependencias..."
+sudo apt update
+sudo add-apt-repository universe -y
+sudo apt install -y apache2 mysql-client php php-mysql libapache2-mod-php php-curl php-xml php-mbstring php-zip curl git unzip
+
+# Instalar WP-CLI
+log "Instalando WP-CLI..."
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+sudo mv wp-cli.phar /usr/local/bin/wp
+
+# Limpiar el directorio de Apache
+log "Limpiando el directorio de Apache..."
+sudo rm -rf /var/www/html/*
+sudo chmod -R 755 /var/www/html
+sudo chown -R ubuntu:ubuntu /var/www/html
+
+# Crear base de datos y usuario, si no existen
+log "Creando base de datos y usuario (si no existe)..."
+mysql -h $RDS_ENDPOINT -u $DB_USERNAME -p$DB_PASSWORD <<EOF
+CREATE DATABASE IF NOT EXISTS $DB_NAME;
+CREATE USER IF NOT EXISTS '$DB_USERNAME'@'%' IDENTIFIED BY '$DB_PASSWORD';
+GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USERNAME'@'%';
+FLUSH PRIVILEGES;
+
+# Descargar WordPress
+log "Descargando WordPress..."
+wp core download --path=/var/www/html
+
+# Eliminar el archivo wp-config.php existente si hay uno
+rm -f /var/www/html/wp-config.php
+
+# Configurar wp-config.php
+log "Configurando wp-config.php..."
+wp core config --dbname="$DB_NAME" --dbuser="$DB_USERNAME" --dbpass="$DB_PASSWORD" --dbhost="$RDS_ENDPOINT" --dbprefix=wp_ --path=/var/www/html
+
+# Instalar WordPress
+log "Instalando WordPress..."
+wp core install --url="$WP_URL" --title="CMS - TICKETING" --admin_user="$DB_USERNAME" --admin_password="$DB_PASSWORD" --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
+
+# Instalar plugins adicionales
+log "Instalando plugins..."
+wp plugin install supportcandy --activate --path=/var/www/html
+wp plugin install user-registration --activate --path=/var/www/html
+
+# Crear paginas de registro y soporte
+log "Creando paginas de registro y soporte..."
+REGISTER_PAGE_ID=$(wp post create --post_title="Registro de Usuarios" --post_content="[user_registration_form]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain)
+SUPPORT_PAGE_ID=$(wp post create --post_title="Soporte de Tickets" --post_content="[supportcandy]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain)
+
+# Habilitar el registro de usuarios
+wp option update users_can_register 1 --path=/var/www/html
+wp option update default_role "subscriber" --path=/var/www/html
+
+# Crear rol personalizado "Cliente de soporte"
+log "Creando rol personalizado 'Cliente de soporte'..."
+wp role create "$ROLE_NAME" "Cliente de soporte" --path=/var/www/html
+wp role add_cap "$ROLE_NAME" "read" --path=/var/www/html
+wp role add_cap "$ROLE_NAME" "create_ticket" --path=/var/www/html
+wp role add_cap "$ROLE_NAME" "view_own_ticket" --path=/var/www/html
+
+# Configurar Apache para WordPress con SSL
+log "Configurando Apache para WordPress con SSL..."
+sudo bash -c "cat > /etc/apache2/sites-available/wordpress.conf <<APACHE
+<VirtualHost *:443>
+    ServerAdmin admin@srestrepoj-wordpress.duckdns.org
+    ServerName  srestrepoj-wordpress.duckdns.org
+
+    DocumentRoot /var/www/html
+
+    SSLEngine on
+    SSLCertificateFile $SSL_CERT
+    SSLCertificateKeyFile $SSL_KEY
+
+    <Directory /var/www/html>
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+APACHE"
+
+# Habilitar el sitio de WordPress y reiniciar Apache
+log "Reiniciando Apache..."
+sudo a2dissite 000-default.conf
+sudo a2ensite wordpress.conf
+sudo a2enmod rewrite ssl
+sudo systemctl restart apache2
+
+log "¡Instalación completada! Accede a tu WordPress en: $WP_URL"
+EOF
+)
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+    --network-interfaces "SubnetId=$SUBNET_ID,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+    --user-data "$USER_DATA_SCRIPT" \
+    --query "Instances[0].InstanceId" \
+    --output text)
+echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
