@@ -37,7 +37,7 @@ sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot
 if [ -f "$CERT_PATH" ]; then
     sudo certbot renew --non-interactive --quiet
 else
-    sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos -m admin@$DUCKDNS_DOMAIN
+    sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos
 fi
 
 # FUSIONAR ARCHIVOS DE CERTIFICADO
