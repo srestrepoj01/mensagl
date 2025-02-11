@@ -205,8 +205,24 @@ PRIVATE_IP="10.225.1.10"
 INSTANCE_TYPE="t2.micro"
 VOLUME_SIZE=8
 
-USER_DATA_SCRIPT=$(cat AWS-DATA-USER/haproxy_prosody.sh)
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+# CAMBIAR LINK DE DESCARGA
+sudo curl -o /home/ubuntu/setup.sh https://raw.githubusercontent.com/srestrepoj01/mensagl/refs/heads/main/AWS-CLI/AWS-DATA-USER/haproxy_prosody.sh
+sudo chown ubuntu:ubuntu setup.sh
+sudo chmod +x /home/ubuntu/setup.sh
+sudo bash /home/ubuntu/setup.sh
 
+# Configurar la clave SSH
+sudo mkdir -p /home/ubuntu/.ssh
+sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
+
+# Copiar A prosody, para configurarlo
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/$DUCKDNS_DOMAIN ubuntu@10.225.3.20:/home/ubuntu
+EOF
+)
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
     --instance-type "$INSTANCE_TYPE" \
