@@ -246,7 +246,7 @@ sudo mkdir -p /home/ubuntu/duckdns
 
 sudo cat <<EOL > /home/ubuntu/duckdns/duck.sh
 echo url="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN&ip=" | curl -k -o /home/ubuntu/duckdns/duck.log -K -
-EOL
+
 
 sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 
@@ -325,8 +325,7 @@ backend wordpress_back
     mode http
     balance roundrobin
     server wordpress1 10.225.4.10:80 check
-EOL
-
+    
 # REINICIAR Y HABILITAR HAPROXY
 sudo systemctl restart haproxy
 sudo systemctl enable haproxy
