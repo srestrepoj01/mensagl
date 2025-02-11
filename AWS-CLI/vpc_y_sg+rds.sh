@@ -325,7 +325,7 @@ backend wordpress_back
     mode http
     balance roundrobin
     server wordpress1 10.225.4.10:80 check
-    
+
 # REINICIAR Y HABILITAR HAPROXY
 sudo systemctl restart haproxy
 sudo systemctl enable haproxy
@@ -468,7 +468,7 @@ log() {
 
 # Funcion para esperar a que la base de datos esté disponible
 wait_for_db() {
-    log "Esperando a que la base de datos estE disponible en $RDS_ENDPOINT..."
+    log "Esperando a que la base de datos este disponible en $RDS_ENDPOINT..."
     while ! mysql -h "$RDS_ENDPOINT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" &>/dev/null; do
         log "Base de datos no disponible, esperando 10 segundos..."
         sleep 10
