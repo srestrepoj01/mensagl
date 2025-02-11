@@ -108,11 +108,12 @@ backend xmpp_back
     balance roundrobin
     server mensajeria1 10.225.3.20:5222 check
     server mensajeria2 10.225.3.20:5269 check
+    server mensajeria3 10.225.3.20:5270 check
 
 backend http_back
     mode http
     balance roundrobin
-    server mensajeria3 10.225.3.20:80 check
+    server mensajeria4 10.225.3.20:80 check
 EOL
 
 # REINICIAR Y HABILITAR HAPROXY
