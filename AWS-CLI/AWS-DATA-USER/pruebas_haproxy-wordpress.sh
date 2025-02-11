@@ -37,7 +37,7 @@ sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot
 if [ -f "$CERT_PATH" ]; then
     sudo certbot renew --non-interactive --quiet
 else
-    sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos
+    sudo certbot certonly --standalone -d $DUCKDNS_DOMAIN --non-interactive --agree-tos --email srestrepoj01@educantabria.es
 fi
 
 # FUSIONAR ARCHIVOS DE CERTIFICADO
