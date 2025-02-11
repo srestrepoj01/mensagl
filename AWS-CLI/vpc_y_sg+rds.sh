@@ -312,6 +312,21 @@ SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
 PRIVATE_IP="10.225.3.20"
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
+
+
+#
+# MIRAR
+#
+
+# Configurar la clave SSH
+sudo mkdir -p /home/ubuntu/.ssh
+sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
+
+# Copiar A wordpress, para configurarlo
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/$DUCKDNS_DOMAIN ubuntu@10.225.4.10:/home/ubuntu
+
 # Instalación de Prosody y configuración de base de datos MySQL externa.
 
 # Variables
