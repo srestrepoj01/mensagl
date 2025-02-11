@@ -416,7 +416,7 @@ sudo systemctl restart prosody
 
 # Crear usuario administrador
 echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
-sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "SuperSecretPass"
+sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
 
 echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
 EOF
