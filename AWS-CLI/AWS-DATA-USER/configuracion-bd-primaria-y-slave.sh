@@ -33,14 +33,14 @@ EOF
 # 3. Reiniciar servicio
 sudo systemctl restart mysql
 
-# 4. Configuración básica de seguridad
+# 4. Configuracion básica de seguridad
 sudo mysql -u root -p"$db_password" <<EOF
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$db_password';
 CREATE DATABASE IF NOT EXISTS $db_name;
 FLUSH PRIVILEGES;
 EOF
 
-# 5. Configuración específica por rol
+# 5. Configuracion específica por rol
 if [ "$role" = "primary" ]; then
     sudo mysql -u root -p"$db_password" <<EOF
     CREATE USER IF NOT EXISTS '$db_user'@'%' IDENTIFIED WITH mysql_native_password BY '$db_password';
@@ -51,7 +51,7 @@ if [ "$role" = "primary" ]; then
 EOF
 
 elif [ "$role" = "secondary" ]; then
-    # Esperar conexión con primario
+    # Esperar conexion con primario
     until nc -z $primary_ip 3306; do sleep 10; done
 
     sudo mysql -u root -p"$db_password" <<EOF
