@@ -220,7 +220,7 @@ sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
 sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
 
 # Copiar A prosody, para configurarlo
-sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/$DUCKDNS_DOMAIN ubuntu@10.225.3.20:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.3.20:/home/ubuntu
 EOF
 )
 INSTANCE_ID=$(aws ec2 run-instances \
@@ -257,7 +257,7 @@ sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
 sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
 
 # Copiar A wordpress, para configurarlo
-sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/$DUCKDNS_DOMAIN ubuntu@10.225.4.10:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
 EOF
 )
 
