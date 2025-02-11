@@ -36,7 +36,7 @@ sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 cat /home/ubuntu/duckdns/duck.log
 
 # INSTALACION DE CERTBOT
-sudo apt update && sudo  DEBIAN_FRONTEND=noninteractive apt install certbot -y
+sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install certbot -y
 
 # CONFIGURACION DE LET'S ENCRYPT (Certbot)
 if [ -f "$CERT_PATH" ]; then
@@ -98,7 +98,9 @@ frontend xmpp_front
 
 frontend http_xmpp
     bind *:80
+    bind *:443 ssl crt /etc/letsencrypt/live/$DUCKDNS_DOMAIN/haproxy.pem
     mode http
+    redirect scheme https if !{ ssl_fc }
     default_backend http_back
 
 backend xmpp_back
@@ -120,7 +122,3 @@ sudo systemctl enable haproxy
 # VERIFICAR ESTADO DE HAPROXY
 sudo systemctl status haproxy --no-pager
 
-################
-#  Copiar A prosody, para configurarlo  
-# sudo scp -i "ssh-mensagl-2025-sebastian.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.4.10:/home/ubuntu             #
-################
