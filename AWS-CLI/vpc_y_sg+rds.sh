@@ -627,6 +627,8 @@ log "Instalando plugins..."
 wp plugin install supportcandy --activate --path=/var/www/html
 wp plugin install user-registration --activate --path=/var/www/html
 
+wp plugin install wps-hide-login --activate
+wp option update wps_hide_login_url $DB_USERNAME
 # Crear paginas de registro y soporte
 log "Creando paginas de registro y soporte..."
 REGISTER_PAGE_ID=$(wp post create --post_title="Registro de Usuarios" --post_content="[user_registration_form]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain)
@@ -639,9 +641,9 @@ wp option update default_role "subscriber" --path=/var/www/html
 # Crear rol personalizado "Cliente de soporte"
 log "Creando rol personalizado 'Cliente de soporte'..."
 wp role create "$ROLE_NAME" "Cliente de soporte" --path=/var/www/html
-wp role add_cap "$ROLE_NAME" "read" --path=/var/www/html
-wp role add_cap "$ROLE_NAME" "create_ticket" --path=/var/www/html
-wp role add_cap "$ROLE_NAME" "view_own_ticket" --path=/var/www/html
+wp role cap "$ROLE_NAME" "read" --path=/var/www/html
+wp role cap "$ROLE_NAME" "create_ticket" --path=/var/www/html
+wp role cap "$ROLE_NAME" "view_own_ticket" --path=/var/www/html
 
 # Configurar Apache para WordPress con SSL
 log "Configurando Apache para WordPress con SSL..."
@@ -768,10 +770,6 @@ log "Instalando plugins..."
 wp plugin install supportcandy --activate --path=/var/www/html
 wp plugin install user-registration --activate --path=/var/www/html
 
-# Crear paginas de registro y soporte
-log "Creando paginas de registro y soporte..."
-REGISTER_PAGE_ID=$(wp post create --post_title="Registro de Usuarios" --post_content="[user_registration_form]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain)
-SUPPORT_PAGE_ID=$(wp post create --post_title="Soporte de Tickets" --post_content="[supportcandy]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain)
 
 # Habilitar el registro de usuarios
 wp option update users_can_register 1 --path=/var/www/html
@@ -780,9 +778,9 @@ wp option update default_role "subscriber" --path=/var/www/html
 # Crear rol personalizado "Cliente de soporte"
 log "Creando rol personalizado 'Cliente de soporte'..."
 wp role create "$ROLE_NAME" "Cliente de soporte" --path=/var/www/html
-wp role add_cap "$ROLE_NAME" "read" --path=/var/www/html
-wp role add_cap "$ROLE_NAME" "create_ticket" --path=/var/www/html
-wp role add_cap "$ROLE_NAME" "view_own_ticket" --path=/var/www/html
+wp role cap "$ROLE_NAME" "read" --path=/var/www/html
+wp role cap "$ROLE_NAME" "create_ticket" --path=/var/www/html
+wp role cap "$ROLE_NAME" "view_own_ticket" --path=/var/www/html
 
 # Configurar Apache para WordPress con SSL
 log "Configurando Apache para WordPress con SSL..."

@@ -93,8 +93,9 @@ frontend wordpress_front
 
 backend wordpress_back
     mode http
-    balance roundrobin
+    balance source
     server wordpress1 10.225.4.10:80 check
+    server wordpress2 10.225.4.11:80 check
 EOL
 
 # REINICIAR Y HABILITAR HAPROXY

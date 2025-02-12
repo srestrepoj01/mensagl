@@ -112,7 +112,7 @@ backend xmpp_back
 
 backend http_back
     mode http
-    balance roundrobin
+    balance source
     server mensajeria4 10.225.3.20:80 check
 
 backend db_back
