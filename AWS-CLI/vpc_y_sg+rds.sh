@@ -35,8 +35,8 @@ echo "${PEM_KEY}"
 # Variables para RDS, se pueden cambiar los valores por los deseados
 RDS_INSTANCE_ID="wordpress-db"
 read -r -p "Ingrese el nombre de la instancia RDS / BD: " DB_NAME
-read -r -p "Ingrese el nombre de usuario de la BD: " DB_USERNAME
-read -r -p "Ingrese la contraseña de la BD: " DB_PASSWORD
+read -r -p "Ingrese el nombre de usuario de la BD - RDS: " DB_USERNAME
+read -r -p "Ingrese la contraseña del usuario BD - RDS: " DB_PASSWORD
 
 
 exec > "$LOG_FILE" 2>&1
