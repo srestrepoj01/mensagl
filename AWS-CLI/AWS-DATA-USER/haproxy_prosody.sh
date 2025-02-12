@@ -24,7 +24,7 @@ EOL
 
 # Cambia la propiedad y los permisos del script
 sudo chown ubuntu:ubuntu /home/ubuntu/duckdns/duck.sh
-sudo chmod 700 /home/ubuntu/duckdns/duck.sh
+sudo chmod 777 /home/ubuntu/duckdns/duck.sh
 
 # Agrega la tarea al crontab para ejecutarse cada 5 minutos
 CRON_JOB="@reboot /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1"
