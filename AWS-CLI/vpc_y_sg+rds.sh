@@ -195,6 +195,12 @@ RDS_ENDPOINT=$(aws rds describe-db-instances \
     --output text)
 echo "RDS Endpoint: $RDS_ENDPOINT"
 
+##### CREAR LA BASE DE DATOS #####
+mysql -h $RDS_ENDPOINT -u $DB_USERNAME -p$DB_PASSWORD
+CREATE DATABASE wordpressdb;
+GRANT ALL PRIVILEGES ON wordpressdb.* TO '$DB_USERNAME'@'%';
+FLUSH PRIVILEGES;
+
 ##################################################                       
 #             INSTANCIAS Y SERVICIOS             #
 ##################################################
@@ -538,7 +544,7 @@ sudo systemctl restart apache2
 
 # Descargar y configurar WordPress
 sudo -u www-data wp-cli core download --path=/var/www/html
-sudo -u www-data wp-cli core config --dbname=wordpress --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
+sudo -u www-data wp-cli core config --dbname=wordpressdb --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
 sudo -u www-data wp-cli core install --url='https://srestrepoj-wordp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
 
 # Instalar y activar plugins
@@ -628,7 +634,7 @@ sudo systemctl restart apache2
 
 # Descargar y configurar WordPress
 sudo -u www-data wp-cli core download --path=/var/www/html
-sudo -u www-data wp-cli core config --dbname=wordpress --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
+sudo -u www-data wp-cli core config --dbname=wordpressdb --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
 sudo -u www-data wp-cli core install --url='https://srestrepoj-wordp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
 
 # Instalar y activar plugins
