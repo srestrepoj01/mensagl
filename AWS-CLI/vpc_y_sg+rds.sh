@@ -260,8 +260,8 @@ sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
 sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
 
 # Copiar A wordpress, para configurarlo, en ambas instancias del cluster
-sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
-sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wordpress.duckdns.org ubuntu@10.225.4.11:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wpd.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wpd.duckdns.org ubuntu@10.225.4.11:/home/ubuntu
 EOF
 )
 

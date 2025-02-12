@@ -3,9 +3,9 @@
 # Variables
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 BACKUP_CFG_PATH="/etc/haproxy/haproxy.cfg.bak"
-DUCKDNS_DOMAIN="srestrepoj-wp"
+DUCKDNS_DOMAIN="srestrepoj-wordp"
 DUCKDNS_TOKEN="d9c2144c-529b-4781-80b7-20ff1a7595de"
-DUCKDNS_DOMAIN_CERT="srestrepoj-wp.duckdns.org"
+DUCKDNS_DOMAIN_CERT="srestrepoj-wordp.duckdns.org"
 SSL_PATH="/etc/letsencrypt/live/${DUCKDNS_DOMAIN}"
 CERT_PATH="${SSL_PATH}/fullchain.pem"
 LOG_FILE="/var/log/script.log"
