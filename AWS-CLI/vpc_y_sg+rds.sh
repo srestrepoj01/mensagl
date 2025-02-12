@@ -572,11 +572,11 @@ $_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.duckdns.org";\
 ' /var/www/html/wp-config.php
 
 # Configurar SSL
-sudo a2enmod ssl
-sudo a2enmod headers
-sudo a2ensite default-ssl.conf
-sudo a2dissite 000-default.conf
-sudo systemctl reload apache2
+#sudo a2enmod ssl
+#sudo a2enmod headers
+#sudo a2ensite default-ssl.conf
+#sudo a2dissite 000-default.conf
+#sudo systemctl reload apache2
 EOF
 )
 INSTANCE_ID=$(aws ec2 run-instances \
@@ -659,11 +659,11 @@ $_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.org";\
 ' /var/www/html/wp-config.php
 
 # Configurar SSL
-sudo a2enmod ssl
-sudo a2enmod headers
-sudo a2ensite default-ssl.conf
-sudo a2dissite 000-default.conf
-sudo systemctl reload apache2
+#sudo a2enmod ssl
+#sudo a2enmod headers
+#sudo a2ensite default-ssl.conf
+#sudo a2dissite 000-default.conf
+#sudo systemctl reload apache2
  EOF
  )
 INSTANCE_ID=$(aws ec2 run-instances \
