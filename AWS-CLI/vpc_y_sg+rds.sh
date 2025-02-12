@@ -195,11 +195,6 @@ RDS_ENDPOINT=$(aws rds describe-db-instances \
     --output text)
 echo "RDS Endpoint: $RDS_ENDPOINT"
 
-##### CREAR LA BASE DE DATOS #####
-mysql -h $RDS_ENDPOINT -u $DB_USERNAME -p$DB_PASSWORD
-CREATE DATABASE wordpressdb;
-GRANT ALL PRIVILEGES ON wordpressdb.* TO '$DB_USERNAME'@'%';
-FLUSH PRIVILEGES;
 
 ##################################################                       
 #             INSTANCIAS Y SERVICIOS             #
@@ -516,7 +511,7 @@ PRIVATE_IP="10.225.4.10"
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
 
-sleep 180
+sleep 380
 
 # Actualizar el sistema
 sudo rm -rf /var/lib/apt/lists/*
@@ -541,6 +536,12 @@ sudo chown -R www-data:www-data /var/www/html
 # Reiniciar Apache para aplicar cambios
 sudo a2enmod rewrite
 sudo systemctl restart apache2
+
+# Configurar la BD
+sudo apt install mysql-client -y
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "CREATE DATABASE wordpressdb;"
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "GRANT ALL PRIVILEGES ON wordpressdb.* TO '${DB_USERNAME}'@'%';"
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "FLUSH PRIVILEGES;"
 
 # Descargar y configurar WordPress
 sudo -u www-data wp-cli core download --path=/var/www/html
@@ -606,7 +607,7 @@ PRIVATE_IP="10.225.4.11"
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
 
-sleep 280
+sleep 480
 
 # Actualizar el sistema
 sudo rm -rf /var/lib/apt/lists/*
@@ -631,6 +632,13 @@ sudo chown -R www-data:www-data /var/www/html
 # Reiniciar Apache para aplicar cambios
 sudo a2enmod rewrite
 sudo systemctl restart apache2
+ 
+# Configurar la BD
+sudo apt install mysql-client -y
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD}
+CREATE DATABASE wordpressdb;
+GRANT ALL PRIVILEGES ON wordpressdb.* TO '$DB_USERNAME'@'%';
+FLUSH PRIVILEGES;
 
 # Descargar y configurar WordPress
 sudo -u www-data wp-cli core download --path=/var/www/html
@@ -670,8 +678,8 @@ $_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.org";\
 #sudo a2ensite default-ssl.conf
 #sudo a2dissite 000-default.conf
 #sudo systemctl reload apache2
- EOF
- )
+EOF
+)
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
     --instance-type "$INSTANCE_TYPE" \
