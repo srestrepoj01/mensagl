@@ -655,6 +655,7 @@ USER_DATA_SCRIPT=$(cat <<EOF
 ##############################
 #  INSTALACION WP / PLUGINS  #
 ##############################
+sleep 180
 
 # Variables
 WP_PATH="/var/www/html"
@@ -670,8 +671,8 @@ log() {
 
 # Funcion para esperar a que la base de datos esté disponible
 wait_for_db() {
-    log "Esperando a que la base de datos este disponible en $RDS_ENDPOINT..."
-    while ! mysql -h "$RDS_ENDPOINT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" &>/dev/null; do
+    log "Esperando a que la base de datos este disponible en ${RDS_ENDPOINT}..."
+    while ! mysql -h "${RDS_ENDPOINT}" -u "${DB_USERNAME}" -p"${DB_PASSWORD}" -e "SELECT 1" &>/dev/null; do
         log "Base de datos no disponible, esperando 10 segundos..."
         sleep 10
     done
@@ -699,12 +700,13 @@ sudo rm -rf /var/www/html/*
 sudo chmod -R 755 /var/www/html
 sudo chown -R ubuntu:ubuntu /var/www/html
 
+
 # Crear base de datos y usuario, si no existen
 log "Creando base de datos y usuario (si no existe)..."
-mysql -h $RDS_ENDPOINT -u $DB_USERNAME -p$DB_PASSWORD <<EOF
-CREATE DATABASE IF NOT EXISTS $DB_NAME;
-CREATE USER IF NOT EXISTS '$DB_USERNAME'@'%' IDENTIFIED BY '$DB_PASSWORD';
-GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USERNAME'@'%';
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} <<EOF
+CREATE DATABASE IF NOT EXISTS ${DB_NAME};
+CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';
 FLUSH PRIVILEGES;
 
 # Descargar WordPress
@@ -716,11 +718,11 @@ rm -f /var/www/html/wp-config.php
 
 # Configurar wp-config.php
 log "Configurando wp-config.php..."
-wp core config --dbname="$DB_NAME" --dbuser="$DB_USERNAME" --dbpass="$DB_PASSWORD" --dbhost="$RDS_ENDPOINT" --dbprefix=wp_ --path=/var/www/html
+wp core config --dbname="${DB_NAME}" --dbuser="${DB_USERNAME}" --dbpass="${DB_PASSWORD}" --dbhost="${RDS_ENDPOINT}" --dbprefix=wp_ --path=/var/www/html
 
 # Instalar WordPress
 log "Instalando WordPress..."
-wp core install --url="$WP_URL" --title="CMS - TICKETING" --admin_user="$DB_USERNAME" --admin_password="$DB_PASSWORD" --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
+wp core install --url="$WP_URL" --title="CMS - TICKETING" --admin_user="${DB_USERNAME}" --admin_password="${DB_PASSWORD}" --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
 
 # Instalar plugins adicionales
 log "Instalando plugins..."
@@ -735,9 +737,9 @@ wp option update default_role "subscriber" --path=/var/www/html
 # Crear rol personalizado "Cliente de soporte"
 log "Creando rol personalizado 'Cliente de soporte'..."
 wp role create "cliente_soporte" "Cliente de soporte" --path=/var/www/html
-wp role cap "cliente_soporte" "read" --path=/var/www/html
-wp role cap "cliente_soporte" "create_ticket" --path=/var/www/html
-wp role cap "cliente_soporte" "view_own_ticket" --path=/var/www/html
+wp cap add cliente_soporte read --path=/var/www/html
+wp cap add cliente_soporte create_ticket --path=/var/www/html
+wp cap add cliente_soporte view_own_ticket --path=/var/www/html
 
 # Configurar Apache para WordPress con SSL
 log "Configurando Apache para WordPress con SSL..."
