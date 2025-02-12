@@ -334,12 +334,6 @@ USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
 # Instalación de Prosody y configuración de base de datos MySQL externa.
 
-# Variables
-db_host="10.225.3.10"
-db_user="admin"
-db_password="Admin123"
-db_name="prosody"
-
 LOG_FILE="/var/log/setup_script.log"
 
 # Función para verificar que una instancia esté activa y en funcionamiento
@@ -403,10 +397,10 @@ log = {
 storage = "sql"
 sql = {
     driver = "MySQL";
-    database = "$db_name";
-    username = "$db_user";
-    password = "$db_password";
-    host = "$db_host";
+    database = "10.225.3.10";
+    username = "admin";
+    password = "Admin123";
+    host = "prosody";
 }
 EOL
 
@@ -511,10 +505,10 @@ log = {
 storage = "sql"
 sql = {
     driver = "MySQL";
-    database = "$db_name";
-    username = "$db_user";
-    password = "$db_password";
-    host = "$db_host";
+    database = "10.225.3.10";
+    username = "admin";
+    password = "Admin123";
+    host = "prosody";
 }
 EOL
 
