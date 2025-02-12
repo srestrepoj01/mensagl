@@ -539,7 +539,7 @@ sudo systemctl restart apache2
 # Descargar y configurar WordPress
 sudo -u www-data wp-cli core download --path=/var/www/html
 sudo -u www-data wp-cli core config --dbname=wordpress --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
-sudo -u www-data wp-cli core install --url='https://srestrepoj-wp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
+sudo -u www-data wp-cli core install --url='https://srestrepoj-wordp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
 
 # Instalar y activar plugins
 sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
@@ -566,9 +566,9 @@ sudo sed -i '1i\
     $list = explode(",", $_SERVER["HTTP_X_FORWARDED_FOR"]);\
     $_SERVER["REMOTE_ADDR"] = $list[0];\
 }\
-$_SERVER["HTTP_HOST"] = "srestrepoj-wp.duckdns.org";\
-$_SERVER["REMOTE_ADDR"] = "srestrepoj-wp.duckdns.org";\
-$_SERVER["SERVER_ADDR"] = "srestrepoj-wp.duckdns.org";\
+$_SERVER["HTTP_HOST"] = "srestrepoj-wordp.duckdns.org";\
+$_SERVER["REMOTE_ADDR"] = "srestrepoj-wordp.duckdns.org";\
+$_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.duckdns.org";\
 ' /var/www/html/wp-config.php
 
 # Configurar SSL
@@ -629,7 +629,7 @@ sudo systemctl restart apache2
 # Descargar y configurar WordPress
 sudo -u www-data wp-cli core download --path=/var/www/html
 sudo -u www-data wp-cli core config --dbname=wordpress --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
-sudo -u www-data wp-cli core install --url='https://srestrepoj-wp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
+sudo -u www-data wp-cli core install --url='https://srestrepoj-wordp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
 
 # Instalar y activar plugins
 sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
@@ -653,9 +653,9 @@ sudo sed -i '1i\
     $list = explode(",", $_SERVER["HTTP_X_FORWARDED_FOR"]);\
     $_SERVER["REMOTE_ADDR"] = $list[0];\
 }\
-$_SERVER["HTTP_HOST"] = "srestrepoj-wp.duckdns.org";\
-$_SERVER["REMOTE_ADDR"] = "srestrepoj-wp.duckdns.org";\
-$_SERVER["SERVER_ADDR"] = "srestrepoj-wp.duckdns.org";\
+$_SERVER["HTTP_HOST"] = "srestrepoj-wordp.org";\
+$_SERVER["REMOTE_ADDR"] = "srestrepoj-wordp.org";\
+$_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.org";\
 ' /var/www/html/wp-config.php
 
 # Configurar SSL
