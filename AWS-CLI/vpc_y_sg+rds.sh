@@ -544,8 +544,8 @@ sudo -u www-data wp-cli core install --url='https://srestrepoj-wp.duckdns.org' -
 # Instalar y activar plugins
 sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
 sudo -u www-data wp-cli plugin install user-registration --activate --path='/var/www/html'
-sudo -u www-data wp-cli plugin install wps-hide-login --activate
-sudo -u www-data wp-cli option update wps_hide_login_url equipo4-admin
+sudo -u www-data wp-cli plugin install wps-hide-login --activate  --path='/var/www/html'
+sudo -u www-data wp-cli option update wps_hide_login_url admin  --path='/var/www/html'
 
 # Configurar roles y permisos
 sudo -u www-data wp-cli cap add "subscriber" "read" --path=/var/www/html
@@ -634,8 +634,8 @@ sudo -u www-data wp-cli core install --url='https://srestrepoj-wp.duckdns.org' -
 # Instalar y activar plugins
 sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
 sudo -u www-data wp-cli plugin install user-registration --activate --path='/var/www/html'
-sudo -u www-data wp-cli plugin install wps-hide-login --activate
-sudo -u www-data wp-cli option update wps_hide_login_url equipo4-admin
+sudo -u www-data wp-cli plugin install wps-hide-login --activate  --path='/var/www/html'
+sudo -u www-data wp-cli option update wps_hide_login_url admin  --path='/var/www/html'
 
 # Configurar roles y permisos
 sudo -u www-data wp-cli cap add "subscriber" "read" --path=/var/www/html
