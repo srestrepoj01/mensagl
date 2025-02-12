@@ -559,7 +559,6 @@ USER_DATA_SCRIPT=$(cat <<EOF
 # Variables
 WP_PATH="/var/www/html"
 WP_URL="https://srestrepoj-wordpress.duckdns.org"
-ROLE_NAME="cliente_soporte"
 SSL_CERT="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/fullchain.pem"
 SSL_KEY="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/privkey.pem"
 LOG_FILE="/var/log/wp_install.log"
@@ -640,10 +639,10 @@ wp option update default_role "subscriber" --path=/var/www/html
 
 # Crear rol personalizado "Cliente de soporte"
 log "Creando rol personalizado 'Cliente de soporte'..."
-wp role create "$ROLE_NAME" "Cliente de soporte" --path=/var/www/html
-wp role cap "$ROLE_NAME" "read" --path=/var/www/html
-wp role cap "$ROLE_NAME" "create_ticket" --path=/var/www/html
-wp role cap "$ROLE_NAME" "view_own_ticket" --path=/var/www/html
+wp role create "cliente_soporte" "Cliente de soporte" --path=/var/www/html
+wp role cap "cliente_soporte" "read" --path=/var/www/html
+wp role cap "cliente_soporte" "create_ticket" --path=/var/www/html
+wp role cap "cliente_soporte" "view_own_ticket" --path=/var/www/html
 
 # Configurar Apache para WordPress con SSL
 log "Configurando Apache para WordPress con SSL..."
@@ -777,10 +776,10 @@ wp option update default_role "subscriber" --path=/var/www/html
 
 # Crear rol personalizado "Cliente de soporte"
 log "Creando rol personalizado 'Cliente de soporte'..."
-wp role create "$ROLE_NAME" "Cliente de soporte" --path=/var/www/html
-wp role cap "$ROLE_NAME" "read" --path=/var/www/html
-wp role cap "$ROLE_NAME" "create_ticket" --path=/var/www/html
-wp role cap "$ROLE_NAME" "view_own_ticket" --path=/var/www/html
+wp role create "cliente_soporte" "Cliente de soporte" --path=/var/www/html
+wp role cap "cliente_soporte" "read" --path=/var/www/html
+wp role cap "cliente_soporte" "create_ticket" --path=/var/www/html
+wp role cap "cliente_soporte" "view_own_ticket" --path=/var/www/html
 
 # Configurar Apache para WordPress con SSL
 log "Configurando Apache para WordPress con SSL..."
