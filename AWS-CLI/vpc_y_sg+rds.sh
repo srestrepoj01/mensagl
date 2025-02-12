@@ -543,7 +543,6 @@ INSTANCE_NAME="soporte-1"
 SUBNET_ID="${SUBNET_PRIVATE2_ID}"
 SECURITY_GROUP_ID="${SG_CMS_ID}"
 PRIVATE_IP="10.225.4.10"
-
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
 ##############################
@@ -563,8 +562,8 @@ log() {
 
 # Funcion para esperar a que la base de datos esté disponible
 wait_for_db() {
-    log "Esperando a que la base de datos este disponible en $RDS_ENDPOINT..."
-    while ! mysql -h "$RDS_ENDPOINT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" &>/dev/null; do
+    log "Esperando a que la base de datos este disponible en ${RDS_ENDPOINT}..."
+    while ! mysql -h "${RDS_ENDPOINT}" -u "${DB_USERNAME}" -p"${DB_PASSWORD}" -e "SELECT 1" &>/dev/null; do
         log "Base de datos no disponible, esperando 10 segundos..."
         sleep 10
     done
@@ -594,10 +593,10 @@ sudo chown -R ubuntu:ubuntu /var/www/html
 
 # Crear base de datos y usuario, si no existen
 log "Creando base de datos y usuario (si no existe)..."
-mysql -h $RDS_ENDPOINT -u $DB_USERNAME -p$DB_PASSWORD <<EOF
-CREATE DATABASE IF NOT EXISTS $DB_NAME;
-CREATE USER IF NOT EXISTS '$DB_USERNAME'@'%' IDENTIFIED BY '$DB_PASSWORD';
-GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USERNAME'@'%';
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} <<EOF
+CREATE DATABASE IF NOT EXISTS ${DB_NAME};
+CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';
 FLUSH PRIVILEGES;
 
 # Descargar WordPress
@@ -609,11 +608,11 @@ rm -f /var/www/html/wp-config.php
 
 # Configurar wp-config.php
 log "Configurando wp-config.php..."
-wp core config --dbname="$DB_NAME" --dbuser="$DB_USERNAME" --dbpass="$DB_PASSWORD" --dbhost="$RDS_ENDPOINT" --dbprefix=wp_ --path=/var/www/html
+wp core config --dbname="${DB_NAME}" --dbuser="${DB_USERNAME}" --dbpass="${DB_PASSWORD}" --dbhost="${RDS_ENDPOINT}" --dbprefix=wp_ --path=/var/www/html
 
 # Instalar WordPress
 log "Instalando WordPress..."
-wp core install --url="$WP_URL" --title="CMS - TICKETING" --admin_user="$DB_USERNAME" --admin_password="$DB_PASSWORD" --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
+wp core install --url="${WP_URL}" --title="CMS - TICKETING" --admin_user="${DB_USERNAME}" --admin_password="${DB_PASSWORD}" --admin_email="srestrepoj01@educantabria.es" --path=/var/www/html
 
 # Instalar plugins adicionales
 log "Instalando plugins..."
@@ -621,7 +620,7 @@ wp plugin install supportcandy --activate --path=/var/www/html
 wp plugin install user-registration --activate --path=/var/www/html
 
 wp plugin install wps-hide-login --activate
-wp option update wps_hide_login_url $DB_USERNAME
+wp option update wps_hide_login_url ${DB_USERNAME}
 # Crear paginas de registro y soporte
 log "Creando paginas de registro y soporte..."
 REGISTER_PAGE_ID=$(wp post create --post_title="Registro de Usuarios" --post_content="[user_registration_form]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain)
