@@ -633,12 +633,12 @@ sudo chown -R www-data:www-data /var/www/html
 sudo a2enmod rewrite
 sudo systemctl restart apache2
  
+
 # Configurar la BD
 sudo apt install mysql-client -y
-mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD}
-CREATE DATABASE wordpressdb;
-GRANT ALL PRIVILEGES ON wordpressdb.* TO '$DB_USERNAME'@'%';
-FLUSH PRIVILEGES;
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "CREATE DATABASE wordpressdb;"
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "GRANT ALL PRIVILEGES ON wordpressdb.* TO '${DB_USERNAME}'@'%';"
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "FLUSH PRIVILEGES;"
 
 # Descargar y configurar WordPress
 sudo -u www-data wp-cli core download --path=/var/www/html
