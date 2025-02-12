@@ -552,7 +552,7 @@ USER_DATA_SCRIPT=$(cat <<EOF
 
 # Variables
 WP_PATH="/var/www/html"
-WP_URL="https://srestrepoj-wordpress.duckdns.org"
+WP_URL="https://srestrepoj-wp.duckdns.org"
 SSL_CERT="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/fullchain.pem"
 SSL_KEY="/etc/apache2/ssl/srestrepoj-wordpress.duckdns.org/privkey.pem"
 LOG_FILE="/var/log/wp_install.log"
@@ -602,7 +602,7 @@ FLUSH PRIVILEGES;
 
 # Descargar WordPress
 log "Descargando WordPress..."
-wp core download --path=/var/www/html
+wp core download --path=/var/www/html --locale=es_ES
 
 # Eliminar el archivo wp-config.php existente si hay uno
 rm -f /var/www/html/wp-config.php
@@ -634,9 +634,9 @@ wp option update default_role "subscriber" --path=/var/www/html
 # Crear rol personalizado "Cliente de soporte"
 log "Creando rol personalizado 'Cliente de soporte'..."
 wp role create "cliente_soporte" "Cliente de soporte" --path=/var/www/html
-wp role cap "cliente_soporte" "read" --path=/var/www/html
-wp role cap "cliente_soporte" "create_ticket" --path=/var/www/html
-wp role cap "cliente_soporte" "view_own_ticket" --path=/var/www/html
+wp cap add cliente_soporte read --path=/var/www/html
+wp cap add cliente_soporte create_ticket --path=/var/www/html
+wp cap add cliente_soporte view_own_ticket --path=/var/www/html
 
 # Configurar Apache para WordPress con SSL
 log "Configurando Apache para WordPress con SSL..."
