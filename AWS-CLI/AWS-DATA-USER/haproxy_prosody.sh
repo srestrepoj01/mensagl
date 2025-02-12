@@ -3,51 +3,50 @@
 # Variables
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 BACKUP_CFG_PATH="/etc/haproxy/haproxy.cfg.bak"
-DUCKDNS_DOMAIN="srestrepoj-wp"
+DUCKDNS_DOMAIN="srestrepoj-prosody"
 DUCKDNS_TOKEN="d9c2144c-529b-4781-80b7-20ff1a7595de"
+DUCKDNS_DOMAIN_CERT="srestrepoj-prosody.duckdns.org"
 SSL_PATH="/etc/letsencrypt/live/${DUCKDNS_DOMAIN}"
 CERT_PATH="${SSL_PATH}/fullchain.pem"
-DUCKDNS_DIR="/home/ubuntu/duckdns"
-DUCKDNS_SCRIPT="${DUCKDNS_DIR}/duck.sh"
-DUCKDNS_LOG="${DUCKDNS_DIR}/duck.log"
 LOG_FILE="/var/log/script.log"
-EMAIL="srestrepoj01@educantabria.es"
 
-# Redirige la salida al archivo de registro
+# Redirige toda la salida al archivo de registro LOG_FILE
 exec > >(sudo tee -a "${LOG_FILE}") 2>&1
 
-# Configuración de DuckDNS
-sudo mkdir -p "${DUCKDNS_DIR}"
+# Configuración de DUCKDNS
+sudo mkdir -p /home/ubuntu/duckdns
 
 # Crea el script de actualización de DuckDNS
-sudo tee "${DUCKDNS_SCRIPT}" > /dev/null <<EOL
+sudo cat <<EOL > /home/ubuntu/duckdns/duck.sh
 #!/bin/bash
-echo url="https://www.duckdns.org/update?domains=${DUCKDNS_DOMAIN}&token=${DUCKDNS_TOKEN}&ip=" | curl -k -o "${DUCKDNS_LOG}" -K -
+echo url="https://www.duckdns.org/update?domains=${DUCKDNS_DOMAIN}&token=${DUCKDNS_TOKEN}&ip=" | curl -k -o /home/ubuntu/duckdns/duck.log -K -
 EOL
 
 # Cambia la propiedad y los permisos del script
-sudo chown ubuntu:ubuntu "${DUCKDNS_SCRIPT}"
-sudo chmod 700 "${DUCKDNS_SCRIPT}"
+sudo chown ubuntu:ubuntu /home/ubuntu/duckdns/duck.sh
+sudo chmod 700 /home/ubuntu/duckdns/duck.sh
 
-# Agrega la tarea al crontab para ejecutarse al reiniciar
-CRON_JOB="@reboot ${DUCKDNS_SCRIPT} >/dev/null 2>&1"
-(crontab -l 2>/dev/null; echo "${CRON_JOB}") | crontab -
+# Agrega la tarea al crontab para ejecutarse cada 5 minutos
+CRON_JOB="@reboot /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1"
+(crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
 
-# Prueba el script de actualización
-sudo chmod +x "${DUCKDNS_SCRIPT}"
-sudo "${DUCKDNS_SCRIPT}"
+# Prueba el script
+sudo chmod +x /home/ubuntu/duckdns/duck.sh
+sudo /home/ubuntu/duckdns/duck.sh
 
-# Verifica el resultado del intento
-sudo cat "${DUCKDNS_LOG}"
+# Verifica el resultado del último intento
+sudo cat /home/ubuntu/duckdns/duck.log
 
 # Instala Certbot
 sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot
 
-# Configuración de Let's Encrypt
+# Configuración de Let's Encrypt (Certbot)
 if [ -f "${CERT_PATH}" ]; then
+    # Renueva el certificado si ya existe
     sudo certbot renew --non-interactive --quiet
 else
-    sudo certbot certonly --standalone -d "${DUCKDNS_DOMAIN}" --non-interactive --agree-tos --email "${EMAIL}"
+    # Solicita un nuevo certificado
+    sudo certbot certonly --standalone -d "${DUCKDNS_DOMAIN_CERT}" --non-interactive --agree-tos --email srestrepoj01@educantabria.es
 fi
 
 # Combina los archivos de certificado para HAProxy
@@ -93,18 +92,36 @@ defaults
     errorfile 503 /etc/haproxy/errors/503.http
     errorfile 504 /etc/haproxy/errors/504.http
 
-frontend wordpress_front
+frontend xmpp_front
+    bind *:5222 
+    bind *:5269
+    mode tcp
+    default_backend xmpp_back
+
+frontend http_xmpp
     bind *:80
     bind *:443 ssl crt ${SSL_PATH}/haproxy.pem
     mode http
     redirect scheme https if !{ ssl_fc }
-    default_backend wordpress_back
+    default_backend http_back
 
-backend wordpress_back
+backend xmpp_back
+    mode tcp
+    balance roundrobin
+    server mensajeria1 10.225.3.20:5222 check
+    server mensajeria2 10.225.3.20:5269 check
+    server mensajeria3 10.225.3.20:5270 check
+
+backend http_back
     mode http
-    balance source
-    server wordpress1 10.225.4.10:80 check
-    server wordpress2 10.225.4.11:80 check
+    balance roundrobin
+    server mensajeria4 10.225.3.20:80 check
+
+backend db_back
+    mode tcp
+    balance roundrobin
+    server db_primary 10.225.3.10:3306 check
+    server db_secondary 10.225.3.11:3306 check backup
 EOL
 
 # Reinicia y habilita HAProxy
