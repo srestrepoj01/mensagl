@@ -26,7 +26,7 @@ sudo systemctl restart apache2
 # Descargar y configurar WordPress
 sudo -u www-data wp-cli core download --path=/var/www/html
 sudo -u www-data wp-cli core config --dbname=wordpress --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
-sudo -u www-data wp-cli core install --url='https://srestrepoj-wp.duckdns.org' --title='Wordpress equipo 4' --admin_user='equipo4' --admin_password='_Admin123' --admin_email='admin@example.com' --path=/var/www/html
+sudo -u www-data wp-cli core install --url='https://srestrepoj-wp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
 
 # Instalar y activar plugins
 sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
@@ -59,8 +59,6 @@ $_SERVER["SERVER_ADDR"] = "srestrepoj-wp.duckdns.org";\
 ' /var/www/html/wp-config.php
 
 # Configurar SSL
-sudo scp -i clave.pem -o StrictHostKeyChecking=no ubuntu@10.212.2.10:/home/ubuntu/certwordpress/* /home/ubuntu/
-sudo cp /home/ubuntu/default-ssl.conf /etc/apache2/sites-available/default-ssl.conf
 sudo a2enmod ssl
 sudo a2enmod headers
 sudo a2ensite default-ssl.conf
