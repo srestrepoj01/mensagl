@@ -207,26 +207,26 @@ PRIVATE_IP="10.225.1.10"
 INSTANCE_TYPE="t2.micro"
 VOLUME_SIZE=8
 
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
-# # CAMBIAR LINK DE DESCARGA
-# sudo curl -o /home/ubuntu/setup.sh https://raw.githubusercontent.com/srestrepoj01/mensagl/refs/heads/main/AWS-CLI/AWS-DATA-USER/haproxy_prosody.sh
-# sudo chown ubuntu:ubuntu setup.sh
-# sudo chmod +x /home/ubuntu/setup.sh
-# sudo bash /home/ubuntu/setup.sh
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+# CAMBIAR LINK DE DESCARGA
+sudo curl -o /home/ubuntu/setup.sh https://raw.githubusercontent.com/srestrepoj01/mensagl/refs/heads/main/AWS-CLI/AWS-DATA-USER/haproxy_prosody.sh
+sudo chown ubuntu:ubuntu setup.sh
+sudo chmod +x /home/ubuntu/setup.sh
+sudo bash /home/ubuntu/setup.sh
 
-# # Configurar la clave SSH
-# sudo mkdir -p /home/ubuntu/.ssh
-# sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
-# sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
-# sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
+# Configurar la clave SSH
+sudo mkdir -p /home/ubuntu/.ssh
+sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
 
-# # Copiar A prosody, para configurarlo en ambas instancias del cluster
-# sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.3.20:/home/ubuntu
-# sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.3.30:/home/ubuntu
+# Copiar A prosody, para configurarlo en ambas instancias del cluster
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.3.20:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org ubuntu@10.225.3.30:/home/ubuntu
 
-# EOF
-# )
+EOF
+)
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
     --instance-type "$INSTANCE_TYPE" \
@@ -246,25 +246,25 @@ INSTANCE_TYPE="t2.micro"
 SECURITY_GROUP_ID="${SG_PROXY_WP_ID}"
 VOLUME_SIZE=8
 
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
-# # CAMBIAR LINK DE DESCARGA
-# sudo curl -o /home/ubuntu/setup.sh https://raw.githubusercontent.com/srestrepoj01/mensagl/refs/heads/main/AWS-CLI/AWS-DATA-USER/haproxy_wordpress.sh
-# sudo chown ubuntu:ubuntu setup.sh
-# sudo chmod +x /home/ubuntu/setup.sh
-# sudo bash /home/ubuntu/setup.sh
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+# CAMBIAR LINK DE DESCARGA
+sudo curl -o /home/ubuntu/setup.sh https://raw.githubusercontent.com/srestrepoj01/mensagl/refs/heads/main/AWS-CLI/AWS-DATA-USER/haproxy_wordpress.sh
+sudo chown ubuntu:ubuntu setup.sh
+sudo chmod +x /home/ubuntu/setup.sh
+sudo bash /home/ubuntu/setup.sh
 
-# # Configurar la clave SSH
-# sudo mkdir -p /home/ubuntu/.ssh
-# sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
-# sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
-# sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
+# Configurar la clave SSH
+sudo mkdir -p /home/ubuntu/.ssh
+sudo echo "${PEM_KEY}" > /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chmod 400 /home/ubuntu/.ssh/${KEY_NAME}.pem
+sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/${KEY_NAME}.pem
 
-# # Copiar A wordpress, para configurarlo, en ambas instancias del cluster
-# sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wpd.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
-# sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wpd.duckdns.org ubuntu@10.225.4.11:/home/ubuntu
-# EOF
-# )
+# Copiar A wordpress, para configurarlo, en ambas instancias del cluster
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wpd.duckdns.org ubuntu@10.225.4.10:/home/ubuntu
+sudo scp -i "/home/ubuntu/.ssh/${KEY_NAME}.pem" -r /etc/letsencrypt/live/srestrepoj-wpd.duckdns.org ubuntu@10.225.4.11:/home/ubuntu
+EOF
+)
 
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
@@ -331,76 +331,76 @@ INSTANCE_NAME="mensajeria-1"
 SUBNET_ID="${SUBNET_PRIVATE1_ID}"
 SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
 PRIVATE_IP="10.225.3.20"
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
-# # Instalación de Prosody y configuración de base de datos MySQL externa.
-# sleep 120
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+# Instalación de Prosody y configuración de base de datos MySQL externa.
+sleep 120
 
-# LOG_FILE="/var/log/setup_script.log"
+LOG_FILE="/var/log/setup_script.log"
 
-# # Instalación de Prosody
-# echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
-# sudo apt update
-# sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
+# Instalación de Prosody
+echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
+sudo apt update
+sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
 
-# # Configurar Prosody
-# echo "Configurando Prosody..." | tee -a $LOG_FILE
-# sudo tee /etc/prosody/prosody.cfg.lua > /dev/null <<EOL
-# -- Prosody Configuration
+# Configurar Prosody
+echo "Configurando Prosody..." | tee -a $LOG_FILE
+sudo tee /etc/prosody/prosody.cfg.lua > /dev/null <<EOL
+-- Prosody Configuration
 
-# VirtualHost "srestrepoj-prosody.duckdns.org"
-# admins = { "admin@srestrepoj-prosody.duckdns.org" }
+VirtualHost "srestrepoj-prosody.duckdns.org"
+admins = { "admin@srestrepoj-prosody.duckdns.org" }
 
-# modules_enabled = {
-#     "roster";
-#     "saslauth";
-#     "tls";
-#     "dialback";
-#     "disco";
-#     "posix";
-#     "private";
-#     "vcard";
-#     "version";
-#     "uptime";
-#     "time";
-#     "ping";
-#     "register";
-#     "admin_adhoc";
-# }
+modules_enabled = {
+    "roster";
+    "saslauth";
+    "tls";
+    "dialback";
+    "disco";
+    "posix";
+    "private";
+    "vcard";
+    "version";
+    "uptime";
+    "time";
+    "ping";
+    "register";
+    "admin_adhoc";
+}
 
-# allow_registration = true
-# daemonize = true
-# pidfile = "/var/run/prosody/prosody.pid"
-# c2s_require_encryption = true
-# s2s_require_encryption = true
+allow_registration = true
+daemonize = true
+pidfile = "/var/run/prosody/prosody.pid"
+c2s_require_encryption = true
+s2s_require_encryption = true
 
-# log = {
-#     info = "/var/log/prosody/prosody.log";
-#     error = "/var/log/prosody/prosody.err";
-#     "*syslog";
-# }
+log = {
+    info = "/var/log/prosody/prosody.log";
+    error = "/var/log/prosody/prosody.err";
+    "*syslog";
+}
 
-# storage = "sql"
-# sql = {
-#     driver = "MySQL";
-#     database = "10.225.3.10";
-#     username = "admin";
-#     password = "Admin123";
-#     host = "prosody";
-# }
-# EOL
+storage = "sql"
+sql = {
+    driver = "MySQL";
+    database = "10.225.3.10";
+    username = "admin";
+    password = "Admin123";
+    host = "prosody";
+}
+EOL
 
-# # Reiniciar Prosody
-# echo "Reiniciando Prosody..." | tee -a $LOG_FILE
-# sudo systemctl restart prosody
+# Reiniciar Prosody
+echo "Reiniciando Prosody..." | tee -a $LOG_FILE
+sudo systemctl restart prosody
 
-# # Crear usuario administrador
-# echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
-# sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
+# Crear usuario administrador
+echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
+sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
 
-# echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
-# EOF
-# )
+echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
+EOF
+)
  INSTANCE_ID=$(aws ec2 run-instances \
      --image-id "$AMI_ID" \
      --instance-type "t2.medium" \
@@ -418,76 +418,76 @@ INSTANCE_NAME="mensajeria-2"
 SUBNET_ID="${SUBNET_PRIVATE1_ID}"
 SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
 PRIVATE_IP="10.225.3.30"
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
-# # Instalación de Prosody y configuración de base de datos MySQL externa.
-# sleep 120
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+# Instalación de Prosody y configuración de base de datos MySQL externa.
+sleep 120
 
-# LOG_FILE="/var/log/setup_script.log"
+LOG_FILE="/var/log/setup_script.log"
 
-# # Instalación de Prosody
-# echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
-# sudo apt update
-# sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
+# Instalación de Prosody
+echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
+sudo apt update
+sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
 
-# # Configurar Prosody
-# echo "Configurando Prosody..." | tee -a $LOG_FILE
-# sudo tee /etc/prosody/prosody.cfg.lua > /dev/null <<EOL
-# -- Prosody Configuration
+# Configurar Prosody
+echo "Configurando Prosody..." | tee -a $LOG_FILE
+sudo tee /etc/prosody/prosody.cfg.lua > /dev/null <<EOL
+-- Prosody Configuration
 
-# VirtualHost "srestrepoj-prosody.duckdns.org"
-# admins = { "admin@srestrepoj-prosody.duckdns.org" }
+VirtualHost "srestrepoj-prosody.duckdns.org"
+admins = { "admin@srestrepoj-prosody.duckdns.org" }
 
-# modules_enabled = {
-#     "roster";
-#     "saslauth";
-#     "tls";
-#     "dialback";
-#     "disco";
-#     "posix";
-#     "private";
-#     "vcard";
-#     "version";
-#     "uptime";
-#     "time";
-#     "ping";
-#     "register";
-#     "admin_adhoc";
-# }
+modules_enabled = {
+    "roster";
+    "saslauth";
+    "tls";
+    "dialback";
+    "disco";
+    "posix";
+    "private";
+    "vcard";
+    "version";
+    "uptime";
+    "time";
+    "ping";
+    "register";
+    "admin_adhoc";
+}
 
-# allow_registration = true
-# daemonize = true
-# pidfile = "/var/run/prosody/prosody.pid"
-# c2s_require_encryption = true
-# s2s_require_encryption = true
+allow_registration = true
+daemonize = true
+pidfile = "/var/run/prosody/prosody.pid"
+c2s_require_encryption = true
+s2s_require_encryption = true
 
-# log = {
-#     info = "/var/log/prosody/prosody.log";
-#     error = "/var/log/prosody/prosody.err";
-#     "*syslog";
-# }
+log = {
+    info = "/var/log/prosody/prosody.log";
+    error = "/var/log/prosody/prosody.err";
+    "*syslog";
+}
 
-# storage = "sql"
-# sql = {
-#     driver = "MySQL";
-#     database = "10.225.3.10";
-#     username = "admin";
-#     password = "Admin123";
-#     host = "prosody";
-# }
-# EOL
+storage = "sql"
+sql = {
+    driver = "MySQL";
+    database = "10.225.3.10";
+    username = "admin";
+    password = "Admin123";
+    host = "prosody";
+}
+EOL
 
-# # Reiniciar Prosody
-# echo "Reiniciando Prosody..." | tee -a $LOG_FILE
-# sudo systemctl restart prosody
+# Reiniciar Prosody
+echo "Reiniciando Prosody..." | tee -a $LOG_FILE
+sudo systemctl restart prosody
 
-# # Crear usuario administrador
-# echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
-# sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
+# Crear usuario administrador
+echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
+sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
 
-# echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
-# EOF
-# )
+echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
+EOF
+)
  INSTANCE_ID=$(aws ec2 run-instances \
      --image-id "$AMI_ID" \
      --instance-type "t2.medium" \
@@ -508,84 +508,84 @@ INSTANCE_NAME="soporte-1"
 SUBNET_ID="${SUBNET_PRIVATE2_ID}"
 SECURITY_GROUP_ID="${SG_CMS_ID}"
 PRIVATE_IP="10.225.4.10"
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
 
-# sleep 180
+sleep 180
 
-# # Actualizar el sistema
-# sudo rm -rf /var/lib/apt/lists/*
-# sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt install -y apache2 curl git unzip ghostscript libapache2-mod-php mysql-server php php-bcmath php-curl php-imagick php-intl php-json php-mbstring php-mysql php-xml
+# Actualizar el sistema
+sudo rm -rf /var/lib/apt/lists/*
+sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt install -y apache2 curl git unzip ghostscript libapache2-mod-php mysql-server php php-bcmath php-curl php-imagick php-intl php-json php-mbstring php-mysql php-xml
 
-# # Instalar las dependencias de WordPress
-# sudo rm -rf /var/lib/apt/lists/*
-# sudo apt-get update
-# # Instalar las dependencias de WordPress
-# sudo DEBIAN_FRONTEND=noninteractive apt install -y apache2 curl rsync git unzip ghostscript libapache2-mod-php mysql-server php php-bcmath php-curl php-imagick php-intl php-json php-mbstring php-mysql php-xml
+# Instalar las dependencias de WordPress
+sudo rm -rf /var/lib/apt/lists/*
+sudo apt-get update
+# Instalar las dependencias de WordPress
+sudo DEBIAN_FRONTEND=noninteractive apt install -y apache2 curl rsync git unzip ghostscript libapache2-mod-php mysql-server php php-bcmath php-curl php-imagick php-intl php-json php-mbstring php-mysql php-xml
 
-# # Instalar WP-CLI
-# curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-# chmod +x wp-cli.phar
-# sudo mv wp-cli.phar /usr/local/bin/wp-cli
+# Instalar WP-CLI
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+sudo mv wp-cli.phar /usr/local/bin/wp-cli
 
-# # Limpiar el directorio web de nuestro servicio
-# sudo rm -rf /var/www/html/*
-# sudo chmod -R 755 /var/www/html
-# sudo chown -R www-data:www-data /var/www/html
+# Limpiar el directorio web de nuestro servicio
+sudo rm -rf /var/www/html/*
+sudo chmod -R 755 /var/www/html
+sudo chown -R www-data:www-data /var/www/html
 
-# # Reiniciar Apache para aplicar cambios
-# sudo a2enmod rewrite
-# sudo systemctl restart apache2
+# Reiniciar Apache para aplicar cambios
+sudo a2enmod rewrite
+sudo systemctl restart apache2
 
-# # Configurar la BD
-# sudo apt install mysql-client -y
-# mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "CREATE DATABASE wordpressdb;"
-# mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "GRANT ALL PRIVILEGES ON wordpressdb.* TO '${DB_USERNAME}'@'%';"
-# mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "FLUSH PRIVILEGES;"
+# Configurar la BD
+sudo apt install mysql-client -y
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "CREATE DATABASE wordpressdb;"
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "GRANT ALL PRIVILEGES ON wordpressdb.* TO '${DB_USERNAME}'@'%';"
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "FLUSH PRIVILEGES;"
 
-# # Descargar y configurar WordPress
-# sudo -u www-data wp-cli core download --path=/var/www/html
-# sudo -u www-data wp-cli core config --dbname=wordpressdb --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
-# sudo -u www-data wp-cli core install --url='https://srestrepoj-wordp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
+# Descargar y configurar WordPress
+sudo -u www-data wp-cli core download --path=/var/www/html
+sudo -u www-data wp-cli core config --dbname=wordpressdb --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
+sudo -u www-data wp-cli core install --url='https://srestrepoj-wordp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
 
-# # Instalar y activar plugins
-# sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
-# sudo -u www-data wp-cli plugin install user-registration --activate --path='/var/www/html'
-# sudo -u www-data wp-cli plugin install wps-hide-login --activate  --path='/var/www/html'
-# sudo -u www-data wp-cli option update wps_hide_login_url admin  --path='/var/www/html'
+# Instalar y activar plugins
+sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
+sudo -u www-data wp-cli plugin install user-registration --activate --path='/var/www/html'
+sudo -u www-data wp-cli plugin install wps-hide-login --activate  --path='/var/www/html'
+sudo -u www-data wp-cli option update wps_hide_login_url admin  --path='/var/www/html'
 
-# # Configurar roles y permisos
-# sudo -u www-data wp-cli cap add "subscriber" "read" --path=/var/www/html
-# sudo -u www-data wp-cli cap add "subscriber" "create_ticket" --path=/var/www/html
-# sudo -u www-data wp-cli cap add "subscriber" "view_own_ticket" --path=/var/www/html
-# sudo -u www-data wp-cli option update default_role "subscriber" --path=/var/www/html
+# Configurar roles y permisos
+sudo -u www-data wp-cli cap add "subscriber" "read" --path=/var/www/html
+sudo -u www-data wp-cli cap add "subscriber" "create_ticket" --path=/var/www/html
+sudo -u www-data wp-cli cap add "subscriber" "view_own_ticket" --path=/var/www/html
+sudo -u www-data wp-cli option update default_role "subscriber" --path=/var/www/html
 
-# # Habilitar registros y formularios
-# sudo -u www-data wp-cli option update users_can_register 1 --path=/var/www/html
-# sudo -u www-data wp-cli post create --post_title="Mi cuenta" --post_content="[user_registration_my_account]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain
-# sudo -u www-data wp-cli post create --post_title="Registro" --post_content="[user_registration_form id="9"]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain
-# sudo -u www-data wp-cli post create --post_title="Tickets" --post_content="[supportcandy]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain
+# Habilitar registros y formularios
+sudo -u www-data wp-cli option update users_can_register 1 --path=/var/www/html
+sudo -u www-data wp-cli post create --post_title="Mi cuenta" --post_content="[user_registration_my_account]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain
+sudo -u www-data wp-cli post create --post_title="Registro" --post_content="[user_registration_form id="9"]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain
+sudo -u www-data wp-cli post create --post_title="Tickets" --post_content="[supportcandy]" --post_status="publish" --post_type="page" --path=/var/www/html --porcelain
 
-# # Ajustar configuración de wp-config.php
-# sudo sed -i '1d' /var/www/html/wp-config.php
-# sudo sed -i '1i\
-# <?php if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {\
-#     $list = explode(",", $_SERVER["HTTP_X_FORWARDED_FOR"]);\
-#     $_SERVER["REMOTE_ADDR"] = $list[0];\
-# }\
-# $_SERVER["HTTP_HOST"] = "srestrepoj-wordp.duckdns.org";\
-# $_SERVER["REMOTE_ADDR"] = "srestrepoj-wordp.duckdns.org";\
-# $_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.duckdns.org";\
-# ' /var/www/html/wp-config.php
+# Ajustar configuración de wp-config.php
+sudo sed -i '1d' /var/www/html/wp-config.php
+sudo sed -i '1i\
+<?php if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {\
+    $list = explode(",", $_SERVER["HTTP_X_FORWARDED_FOR"]);\
+    $_SERVER["REMOTE_ADDR"] = $list[0];\
+}\
+$_SERVER["HTTP_HOST"] = "srestrepoj-wordp.duckdns.org";\
+$_SERVER["REMOTE_ADDR"] = "srestrepoj-wordp.duckdns.org";\
+$_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.duckdns.org";\
+' /var/www/html/wp-config.php
 
-# # Configurar SSL
-# #sudo a2enmod ssl
-# #sudo a2enmod headers
-# #sudo a2ensite default-ssl.conf
-# #sudo a2dissite 000-default.conf
-# #sudo systemctl reload apache2
-# EOF
-# )
+# Configurar SSL
+#sudo a2enmod ssl
+#sudo a2enmod headers
+#sudo a2ensite default-ssl.conf
+#sudo a2dissite 000-default.conf
+#sudo systemctl reload apache2
+EOF
+)
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
     --instance-type "$INSTANCE_TYPE" \
@@ -604,82 +604,82 @@ SUBNET_ID="${SUBNET_PRIVATE2_ID}"
 SECURITY_GROUP_ID="${SG_CMS_ID}"
 PRIVATE_IP="10.225.4.11"
 
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
 
-# sleep 480
+sleep 480
 
-# # Actualizar el sistema
-# sudo rm -rf /var/lib/apt/lists/*
-# sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt install -y apache2 curl git unzip ghostscript libapache2-mod-php mysql-server php php-bcmath php-curl php-imagick php-intl php-json php-mbstring php-mysql php-xml
+# Actualizar el sistema
+sudo rm -rf /var/lib/apt/lists/*
+sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt install -y apache2 curl git unzip ghostscript libapache2-mod-php mysql-server php php-bcmath php-curl php-imagick php-intl php-json php-mbstring php-mysql php-xml
 
-# # Instalar las dependencias de WordPress
-# sudo rm -rf /var/lib/apt/lists/*
-# sudo apt-get update
-# # Instalar las dependencias de WordPress
-# sudo DEBIAN_FRONTEND=noninteractive apt install -y apache2 curl rsync git unzip ghostscript libapache2-mod-php mysql-server php php-bcmath php-curl php-imagick php-intl php-json php-mbstring php-mysql php-xml
+# Instalar las dependencias de WordPress
+sudo rm -rf /var/lib/apt/lists/*
+sudo apt-get update
+# Instalar las dependencias de WordPress
+sudo DEBIAN_FRONTEND=noninteractive apt install -y apache2 curl rsync git unzip ghostscript libapache2-mod-php mysql-server php php-bcmath php-curl php-imagick php-intl php-json php-mbstring php-mysql php-xml
 
-# # Instalar WP-CLI
-# curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-# chmod +x wp-cli.phar
-# sudo mv wp-cli.phar /usr/local/bin/wp-cli
+# Instalar WP-CLI
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+sudo mv wp-cli.phar /usr/local/bin/wp-cli
 
-# # Limpiar el directorio web de nuestro servicio
-# sudo rm -rf /var/www/html/*
-# sudo chmod -R 755 /var/www/html
-# sudo chown -R www-data:www-data /var/www/html
+# Limpiar el directorio web de nuestro servicio
+sudo rm -rf /var/www/html/*
+sudo chmod -R 755 /var/www/html
+sudo chown -R www-data:www-data /var/www/html
 
-# # Reiniciar Apache para aplicar cambios
-# sudo a2enmod rewrite
-# sudo systemctl restart apache2
+# Reiniciar Apache para aplicar cambios
+sudo a2enmod rewrite
+sudo systemctl restart apache2
  
 
-# # Configurar la BD
-# sudo apt install mysql-client -y
-# mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "CREATE DATABASE wordpressdb;"
-# mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "GRANT ALL PRIVILEGES ON wordpressdb.* TO '${DB_USERNAME}'@'%';"
-# mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "FLUSH PRIVILEGES;"
+# Configurar la BD
+sudo apt install mysql-client -y
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "CREATE DATABASE wordpressdb;"
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "GRANT ALL PRIVILEGES ON wordpressdb.* TO '${DB_USERNAME}'@'%';"
+mysql -h ${RDS_ENDPOINT} -u ${DB_USERNAME} -p${DB_PASSWORD} -e "FLUSH PRIVILEGES;"
 
-# # Descargar y configurar WordPress
-# sudo -u www-data wp-cli core download --path=/var/www/html
-# sudo -u www-data wp-cli core config --dbname=wordpressdb --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
-# sudo -u www-data wp-cli core install --url='https://srestrepoj-wordp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
+# Descargar y configurar WordPress
+sudo -u www-data wp-cli core download --path=/var/www/html
+sudo -u www-data wp-cli core config --dbname=wordpressdb --dbuser=${DB_USERNAME} --dbpass=${DB_PASSWORD} --dbhost=${RDS_ENDPOINT} --dbprefix=wp --path=/var/www/html
+sudo -u www-data wp-cli core install --url='https://srestrepoj-wordp.duckdns.org' --title='Wordpress Sebastian' --admin_user='admin' --admin_password='Admin123' --admin_email='admin@example.com' --path=/var/www/html
 
-# # Instalar y activar plugins
-# sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
-# sudo -u www-data wp-cli plugin install user-registration --activate --path='/var/www/html'
-# sudo -u www-data wp-cli plugin install wps-hide-login --activate  --path='/var/www/html'
-# sudo -u www-data wp-cli option update wps_hide_login_url admin  --path='/var/www/html'
+# Instalar y activar plugins
+sudo -u www-data wp-cli plugin install supportcandy --activate --path='/var/www/html'
+sudo -u www-data wp-cli plugin install user-registration --activate --path='/var/www/html'
+sudo -u www-data wp-cli plugin install wps-hide-login --activate  --path='/var/www/html'
+sudo -u www-data wp-cli option update wps_hide_login_url admin  --path='/var/www/html'
 
-# # Configurar roles y permisos
-# sudo -u www-data wp-cli cap add "subscriber" "read" --path=/var/www/html
-# sudo -u www-data wp-cli cap add "subscriber" "create_ticket" --path=/var/www/html
-# sudo -u www-data wp-cli cap add "subscriber" "view_own_ticket" --path=/var/www/html
-# sudo -u www-data wp-cli option update default_role "subscriber" --path=/var/www/html
+# Configurar roles y permisos
+sudo -u www-data wp-cli cap add "subscriber" "read" --path=/var/www/html
+sudo -u www-data wp-cli cap add "subscriber" "create_ticket" --path=/var/www/html
+sudo -u www-data wp-cli cap add "subscriber" "view_own_ticket" --path=/var/www/html
+sudo -u www-data wp-cli option update default_role "subscriber" --path=/var/www/html
 
-# # Habilitar registros y formularios
-# sudo -u www-data wp-cli option update users_can_register 1 --path=/var/www/html
+# Habilitar registros y formularios
+sudo -u www-data wp-cli option update users_can_register 1 --path=/var/www/html
 
-# # Ajustar configuración de wp-config.php
-# sudo sed -i '1d' /var/www/html/wp-config.php
-# sudo sed -i '1i\
-# <?php if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {\
-#     $list = explode(",", $_SERVER["HTTP_X_FORWARDED_FOR"]);\
-#     $_SERVER["REMOTE_ADDR"] = $list[0];\
-# }\
-# $_SERVER["HTTP_HOST"] = "srestrepoj-wordp.org";\
-# $_SERVER["REMOTE_ADDR"] = "srestrepoj-wordp.org";\
-# $_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.org";\
-# ' /var/www/html/wp-config.php
+# Ajustar configuración de wp-config.php
+sudo sed -i '1d' /var/www/html/wp-config.php
+sudo sed -i '1i\
+<?php if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {\
+    $list = explode(",", $_SERVER["HTTP_X_FORWARDED_FOR"]);\
+    $_SERVER["REMOTE_ADDR"] = $list[0];\
+}\
+$_SERVER["HTTP_HOST"] = "srestrepoj-wordp.org";\
+$_SERVER["REMOTE_ADDR"] = "srestrepoj-wordp.org";\
+$_SERVER["SERVER_ADDR"] = "srestrepoj-wordp.org";\
+' /var/www/html/wp-config.php
 
-# # Configurar SSL
-# #sudo a2enmod ssl
-# #sudo a2enmod headers
-# #sudo a2ensite default-ssl.conf
-# #sudo a2dissite 000-default.conf
-# #sudo systemctl reload apache2
-# EOF
-# )
+# Configurar SSL
+#sudo a2enmod ssl
+#sudo a2enmod headers
+#sudo a2ensite default-ssl.conf
+#sudo a2dissite 000-default.conf
+#sudo systemctl reload apache2
+EOF
+)
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
     --instance-type "$INSTANCE_TYPE" \
