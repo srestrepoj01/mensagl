@@ -334,7 +334,7 @@ PRIVATE_IP="10.225.3.20"
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
 # Instalación de Prosody y configuración de base de datos MySQL externa.
-sleep 180
+sleep 120
 
 LOG_FILE="/var/log/setup_script.log"
 
@@ -413,92 +413,92 @@ EOF
      --output text)
  echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
-# # mensajeria-2
-# INSTANCE_NAME="mensajeria-2"
-# SUBNET_ID="${SUBNET_PRIVATE1_ID}"
-# SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
-# PRIVATE_IP="10.225.3.30"
-# USER_DATA_SCRIPT=$(cat <<EOF
-# #!/bin/bash
-# # Instalación de Prosody y configuración de base de datos MySQL externa.
-# LOG_FILE="/var/log/setup_script.log"
+# mensajeria-2
+INSTANCE_NAME="mensajeria-2"
+SUBNET_ID="${SUBNET_PRIVATE1_ID}"
+SECURITY_GROUP_ID="${SG_MENSAJERIA_ID}"
+PRIVATE_IP="10.225.3.30"
+USER_DATA_SCRIPT=$(cat <<EOF
+#!/bin/bash
+# Instalación de Prosody y configuración de base de datos MySQL externa.
+sleep 120
 
+LOG_FILE="/var/log/setup_script.log"
 
+# Instalación de Prosody
+echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
+sudo apt update
+sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
 
-# # Instalación de Prosody
-# echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
-# sudo apt update
-# sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
+# Configurar Prosody
+echo "Configurando Prosody..." | tee -a $LOG_FILE
+sudo tee /etc/prosody/prosody.cfg.lua > /dev/null <<EOL
+-- Prosody Configuration
 
-# # Configurar Prosody
-# echo "Configurando Prosody..." | tee -a $LOG_FILE
-# sudo tee /etc/prosody/prosody.cfg.lua > /dev/null <<EOL
-# -- Prosody Configuration
+VirtualHost "srestrepoj-prosody.duckdns.org"
+admins = { "admin@srestrepoj-prosody.duckdns.org" }
 
-# VirtualHost "srestrepoj-prosody.duckdns.org"
-# admins = { "admin@srestrepoj-prosody.duckdns.org" }
+modules_enabled = {
+    "roster";
+    "saslauth";
+    "tls";
+    "dialback";
+    "disco";
+    "posix";
+    "private";
+    "vcard";
+    "version";
+    "uptime";
+    "time";
+    "ping";
+    "register";
+    "admin_adhoc";
+}
 
-# modules_enabled = {
-#     "roster";
-#     "saslauth";
-#     "tls";
-#     "dialback";
-#     "disco";
-#     "posix";
-#     "private";
-#     "vcard";
-#     "version";
-#     "uptime";
-#     "time";
-#     "ping";
-#     "register";
-#     "admin_adhoc";
-# }
+allow_registration = true
+daemonize = true
+pidfile = "/var/run/prosody/prosody.pid"
+c2s_require_encryption = true
+s2s_require_encryption = true
 
-# allow_registration = true
-# daemonize = true
-# pidfile = "/var/run/prosody/prosody.pid"
-# c2s_require_encryption = true
-# s2s_require_encryption = true
+log = {
+    info = "/var/log/prosody/prosody.log";
+    error = "/var/log/prosody/prosody.err";
+    "*syslog";
+}
 
-# log = {
-#     info = "/var/log/prosody/prosody.log";
-#     error = "/var/log/prosody/prosody.err";
-#     "*syslog";
-# }
+storage = "sql"
+sql = {
+    driver = "MySQL";
+    database = "10.225.3.10";
+    username = "admin";
+    password = "Admin123";
+    host = "prosody";
+}
+EOL
 
-# storage = "sql"
-# sql = {
-#     driver = "MySQL";
-#     database = "10.225.3.10";
-#     username = "admin";
-#     password = "Admin123";
-#     host = "prosody";
-# }
-# EOL
+# Reiniciar Prosody
+echo "Reiniciando Prosody..." | tee -a $LOG_FILE
+sudo systemctl restart prosody
 
-# # Reiniciar Prosody
-# echo "Reiniciando Prosody..." | tee -a $LOG_FILE
-# sudo systemctl restart prosody
+# Crear usuario administrador
+echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
+sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
 
-# # Crear usuario administrador
-# echo "Creando usuario admin@srestrepoj-prosody.duckdns.org..." | tee -a $LOG_FILE
-# sudo prosodyctl register admin srestrepoj-prosody.duckdns.org "Admin123"
-
-# echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
-# EOF
-# )
-#  INSTANCE_ID=$(aws ec2 run-instances \
-#      --image-id "$AMI_ID" \
-#      --instance-type "t2.medium" \
-#      --key-name "$KEY_NAME" \
-#      --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
-#      --network-interfaces "SubnetId=$SUBNET_ID,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
-#      --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
-#      --user-data "$USER_DATA_SCRIPT" \
-#      --query "Instances[0].InstanceId" \
-#      --output text)
-#  echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
+echo "Prosody instalado y configurado con éxito en srestrepoj-prosody.duckdns.org" | tee -a $LOG_FILE
+EOF
+)
+ INSTANCE_ID=$(aws ec2 run-instances \
+     --image-id "$AMI_ID" \
+     --instance-type "t2.medium" \
+     --key-name "$KEY_NAME" \
+     --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$VOLUME_SIZE,VolumeType=gp3,DeleteOnTermination=true}" \
+     --network-interfaces "SubnetId=$SUBNET_ID,DeviceIndex=0,PrivateIpAddresses=[{Primary=true,PrivateIpAddress=$PRIVATE_IP}],Groups=[$SECURITY_GROUP_ID]" \
+     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+     --user-data "$USER_DATA_SCRIPT" \
+     --query "Instances[0].InstanceId" \
+     --output text)
+ echo "${INSTANCE_NAME} creada: ${INSTANCE_ID}"
 
 ##############
 # WORDPRESS  #
@@ -511,7 +511,7 @@ PRIVATE_IP="10.225.4.10"
 USER_DATA_SCRIPT=$(cat <<EOF
 #!/bin/bash
 
-sleep 380
+sleep 180
 
 # Actualizar el sistema
 sudo rm -rf /var/lib/apt/lists/*
