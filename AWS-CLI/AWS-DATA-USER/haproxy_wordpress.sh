@@ -3,9 +3,9 @@
 # Variables
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 BACKUP_CFG_PATH="/etc/haproxy/haproxy.cfg.bak"
-DUCKDNS_DOMAIN="srestrepoj-wordp"
+DUCKDNS_DOMAIN=" srestrepoj-wordpress01 "
 DUCKDNS_TOKEN="d9c2144c-529b-4781-80b7-20ff1a7595de"
-DUCKDNS_DOMAIN_CERT="srestrepoj-wordp.duckdns.org"
+DUCKDNS_DOMAIN_CERT="srestrepoj-wordpress01.duckdns.org"
 SSL_PATH="/etc/letsencrypt/live/${DUCKDNS_DOMAIN}"
 CERT_PATH="${SSL_PATH}/fullchain.pem"
 LOG_FILE="/var/log/script.log"
@@ -14,28 +14,27 @@ LOG_FILE="/var/log/script.log"
 exec > >(sudo tee -a "${LOG_FILE}") 2>&1
 
 # Configuración de DUCKDNS
-sudo mkdir -p /home/ubuntu/duckdns
+mkdir -p /home/ubuntu/duckdns
 
 # Crea el script de actualización de DuckDNS
-sudo cat <<EOL > /home/ubuntu/duckdns/duck.sh
+cat <<EOL > /home/ubuntu/duckdns/duck.sh
 #!/bin/bash
 echo url="https://www.duckdns.org/update?domains=${DUCKDNS_DOMAIN}&token=${DUCKDNS_TOKEN}&ip=" | curl -k -o /home/ubuntu/duckdns/duck.log -K -
 EOL
 
 # Cambia la propiedad y los permisos del script
-sudo chown ubuntu:ubuntu /home/ubuntu/duckdns/duck.sh
-sudo chmod 777 /home/ubuntu/duckdns/duck.sh
+cd /home/ubuntu/duckdns
+chmod 700 chmod 700 duck.sh
 
 # Agrega la tarea al crontab para ejecutarse cada 5 minutos, siguiendo el tutorial de DuckDNS
 CRON_JOB="@reboot /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1"
 (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
 
 # Prueba el script
-sudo chmod +x /home/ubuntu/duckdns/duck.sh
-sudo /home/ubuntu/duckdns/duck.sh
+/home/ubuntu/duckdns/duck.sh
 
 # Verifica el resultado del último intento
-sudo cat /home/ubuntu/duckdns/duck.log
+ cat /home/ubuntu/duckdns/duck.log
 
 # Instala Certbot
 sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot
