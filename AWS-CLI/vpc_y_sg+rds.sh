@@ -106,6 +106,7 @@ SG_PROXY_PROSODY_ID=$(aws ec2 create-security-group --group-name "sg_proxy_inver
 aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 22 --cidr "0.0.0.0/0"
 aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 5222 --cidr "0.0.0.0/0"
 aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 5269 --cidr "0.0.0.0/0"
+aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 3306 --cidr "0.0.0.0/0"
 aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 443 --cidr "0.0.0.0/0"
 aws ec2 authorize-security-group-ingress --group-id "$SG_PROXY_PROSODY_ID" --protocol tcp --port 80 --cidr "0.0.0.0/0"
 aws ec2 authorize-security-group-egress --group-id  "$SG_PROXY_PROSODY_ID" --protocol -1 --port all --cidr "0.0.0.0/0"
@@ -194,7 +195,6 @@ RDS_ENDPOINT=$(aws rds describe-db-instances \
     --query 'DBInstances[0].Endpoint.Address' \
     --output text)
 echo "RDS Endpoint: $RDS_ENDPOINT"
-
 
 
 ##################################################                       
