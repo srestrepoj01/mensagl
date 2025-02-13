@@ -196,6 +196,7 @@ RDS_ENDPOINT=$(aws rds describe-db-instances \
 echo "RDS Endpoint: $RDS_ENDPOINT"
 
 
+
 ##################################################                       
 #             INSTANCIAS Y SERVICIOS             #
 ##################################################
