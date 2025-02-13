@@ -103,7 +103,7 @@ frontend http_xmpp
     bind *:443 ssl crt ${SSL_PATH}/haproxy.pem
     mode http
     redirect scheme https if !{ ssl_fc }
-    default_backend http_back
+    default_backend http_back 
 
 backend xmpp_back
     mode tcp
@@ -111,11 +111,15 @@ backend xmpp_back
     server mensajeria1 10.225.3.20:5222 check
     server mensajeria2 10.225.3.20:5269 check
     server mensajeria3 10.225.3.20:5270 check
+    server mensajeria7 10.225.3.30:5222 check
+    server mensajeria8 10.225.3.30:5269 check
+    server mensajeria9 10.225.3.30:5270 check
 
 backend http_back
     mode http
     balance roundrobin
     server mensajeria4 10.225.3.20:80 check
+    server mensajeria10 10.225.3.30:80 check
 
 backend db_back
     mode tcp
