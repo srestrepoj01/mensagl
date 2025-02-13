@@ -177,7 +177,6 @@ aws rds create-db-instance \
     --storage-type gp2 \
     --master-username "$DB_USERNAME" \
     --master-user-password "$DB_PASSWORD" \
-    --db-name "wordpress_db" \
     --db-subnet-group-name wp-rds-subnet-group \
     --vpc-security-group-ids "$SG_ID_RDS" \
     --backup-retention-period 7 \
