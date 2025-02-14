@@ -23,19 +23,18 @@ echo url="https://www.duckdns.org/update?domains=${DUCKDNS_DOMAIN}&token=${DUCKD
 EOL
 
 # Cambia la propiedad y los permisos del script
-sudo chown ubuntu:ubuntu /home/ubuntu/duckdns/duck.sh
-sudo chmod 777 /home/ubuntu/duckdns/duck.sh
+cd /home/ubuntu/duckdns
+chmod 700 duck.sh
 
 # Agrega la tarea al crontab para ejecutarse cada 5 minutos
 CRON_JOB="@reboot /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1"
 (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
 
 # Prueba el script
-sudo chmod +x /home/ubuntu/duckdns/duck.sh
-sudo /home/ubuntu/duckdns/duck.sh
+/home/ubuntu/duckdns/duck.sh
 
 # Verifica el resultado del último intento
-sudo cat /home/ubuntu/duckdns/duck.log
+cat /home/ubuntu/duckdns/duck.log
 
 # Instala Certbot
 sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot
@@ -78,8 +77,6 @@ global
 
 defaults
     log global
-    mode http
-    option httplog
     option dontlognull
     timeout connect 5000ms
     timeout client 50000ms
@@ -92,38 +89,35 @@ defaults
     errorfile 503 /etc/haproxy/errors/503.http
     errorfile 504 /etc/haproxy/errors/504.http
 
+# Frontend HTTP (Redireccion de HTTP a HTTPS)
+frontend http_xmpp
+    bind *:80
+    mode http
+    redirect scheme https if !{ ssl_fc }
+
+# Frontend XMPP (Solo HTTPS)
 frontend xmpp_front
-    bind *:5222 
-    bind *:5269
+    bind *:443 ssl crt /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org/haproxy.pem
     mode tcp
     default_backend xmpp_back
 
-frontend http_xmpp
-    bind *:80
-    bind *:443 ssl crt ${SSL_PATH}/haproxy.pem
-    mode http
-    redirect scheme https if !{ ssl_fc }
-    default_backend http_back 
-
+# Backend para XMPP
 backend xmpp_back
     mode tcp
     balance roundrobin
-    server mensajeria1 10.225.3.20:5222 check
-    server mensajeria2 10.225.3.20:5269 check
-    server mensajeria3 10.225.3.20:5270 check
-    server mensajeria7 10.225.3.30:5222 check
-    server mensajeria8 10.225.3.30:5269 check
-    server mensajeria9 10.225.3.30:5270 check
+    option tcp-check
+    # Servidores Prosody en 10.225.3.20
+    server prosody1 10.225.3.20:5222 check
+    server prosody2 10.225.3.20:5269 check
+    # Servidores Prosody en 10.225.3.30
+    server prosody3 10.225.3.30:5222 check
+    server prosody4 10.225.3.30:5269 check
 
-backend http_back
-    mode http
-    balance roundrobin
-    server mensajeria4 10.225.3.20:80 check
-    server mensajeria10 10.225.3.30:80 check
-
+# Backend para Base de Datos (Primario y Secundario en Failover)
 backend db_back
     mode tcp
     balance roundrobin
+    option tcp-check
     server db_primary 10.225.3.10:3306 check
     server db_secondary 10.225.3.11:3306 check backup
 EOL

@@ -26,7 +26,7 @@ check_instance_status "10.225.3.10"
 check_instance_status "10.225.3.11"
 
 # Instalación de Prosody
-echo "Instalando Prosody y módulos adicionales..." | tee -a $LOG_FILE
+echo "Instalando Prosody y modulos adicionales..." | tee -a $LOG_FILE
 sudo apt update
 sudo apt install lua-dbi-mysql lua-dbi-postgresql lua-dbi-sqlite3 -y 
 
