@@ -11,60 +11,60 @@ CERT_PATH="${SSL_PATH}/fullchain.pem"
 LOG_FILE="/var/log/script.log"
 
 # Redirige toda la salida al archivo de registro LOG_FILE
-exec > >(tee -a "${LOG_FILE}") 2>&1
+exec > >(sudo tee -a "${LOG_FILE}") 2>&1
 
 # Configuración de DUCKDNS
-mkdir -p /home/ubuntu/duckdns
+sudo mkdir -p /home/ubuntu/duckdns
 
 # Crea el script de actualización de DuckDNS
-cat <<EOL > /home/ubuntu/duckdns/duck.sh
+sudo tee /home/ubuntu/duckdns/duck.sh > /dev/null <<EOL
 #!/bin/bash
 echo url="https://www.duckdns.org/update?domains=${DUCKDNS_DOMAIN}&token=${DUCKDNS_TOKEN}&ip=" | curl -k -o /home/ubuntu/duckdns/duck.log -K -
 EOL
 
 # Cambia la propiedad y los permisos del script
 cd /home/ubuntu/duckdns
-chmod 700 duck.sh
+sudo chmod 700 duck.sh
 
 # Agrega la tarea al crontab solo si no está presente
 CRON_JOB="@reboot /home/ubuntu/duckdns/duck.sh >/dev/null 2>&1"
-(crontab -l 2>/dev/null | grep -Fxq "$CRON_JOB") || (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
+(sudo crontab -l 2>/dev/null | grep -Fxq "$CRON_JOB") || (sudo crontab -l 2>/dev/null; echo "$CRON_JOB") | sudo crontab -
 
 # Prueba el script
-/home/ubuntu/duckdns/duck.sh
+sudo /home/ubuntu/duckdns/duck.sh
 
 # Verifica el resultado del último intento
 cat /home/ubuntu/duckdns/duck.log
 
 # Instala Certbot
-apt update && DEBIAN_FRONTEND=noninteractive apt install -y certbot
+sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y certbot
 
 # Configuración de Let's Encrypt (Certbot)
 if [ -f "${CERT_PATH}" ]; then
     # Renueva el certificado si ya existe
-    certbot renew --non-interactive --quiet
+    sudo certbot renew --non-interactive --quiet
 else
     # Solicita un nuevo certificado
-    certbot certonly --standalone -d "${DUCKDNS_DOMAIN_CERT}" --non-interactive --agree-tos --email srestrepoj01@educantabria.es
+    sudo certbot certonly --standalone -d "${DUCKDNS_DOMAIN_CERT}" --non-interactive --agree-tos --email srestrepoj01@educantabria.es
 fi
 
 # Combina los archivos de certificado para HAProxy
-cat "${SSL_PATH}/fullchain.pem" "${SSL_PATH}/privkey.pem" > "${SSL_PATH}/haproxy.pem"
+sudo cat "${SSL_PATH}/fullchain.pem" "${SSL_PATH}/privkey.pem" > "${SSL_PATH}/haproxy.pem"
 
 # Establece permisos para el certificado
-chmod 644 "${SSL_PATH}/haproxy.pem"
-chmod 755 -R "${SSL_PATH}"
-chmod 755 /etc/letsencrypt/live/
+sudo chmod 644 "${SSL_PATH}/haproxy.pem"
+sudo chmod 755 -R "${SSL_PATH}"
+sudo chmod 755 /etc/letsencrypt/live/
 
 # Instala HAProxy
-apt-get update
-apt-get install -y haproxy
+sudo apt-get update
+sudo apt-get install -y haproxy
 
 # Crea una copia de seguridad de la configuración inicial de HAProxy
-cp "${HAPROXY_CFG_PATH}" "${BACKUP_CFG_PATH}"
+sudo cp "${HAPROXY_CFG_PATH}" "${BACKUP_CFG_PATH}"
 
 # Configura HAProxy
-tee "${HAPROXY_CFG_PATH}" > /dev/null <<EOL
+sudo tee "${HAPROXY_CFG_PATH}" > /dev/null <<EOL
 global
     log /dev/log local0
     log /dev/log local1 notice
@@ -106,8 +106,8 @@ backend wordpress_back
 EOL
 
 # Reinicia y habilita HAProxy
-systemctl restart haproxy
-systemctl enable haproxy
+sudo systemctl restart haproxy
+sudo systemctl enable haproxy
 
 # Verifica el estado de HAProxy
-systemctl status haproxy --no-pager
+sudo systemctl status haproxy --no-pager
