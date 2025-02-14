@@ -54,7 +54,7 @@ $_SERVER["REMOTE_ADDR"] = "srestrepoj-wp.duckdns.org";\
 $_SERVER["SERVER_ADDR"] = "srestrepoj-wp.duckdns.org";\
 ' /var/www/html/wp-config.php
 
-
+# HACER UNA VEZ EJECUTADO
 # sudo scp -i clave.pem -o StrictHostKeyChecking=no ubuntu@10.225.2.10:/home/ubuntu/certwordpress/* /home/ubuntu/
 # sudo cp /home/ubuntu/default-ssl.conf /etc/apache2/sites-available/default-ssl.conf
 # sudo a2enmod ssl
