@@ -93,7 +93,7 @@ defaults
 
 frontend wordpress_front
     bind *:80
-    bind *:443 ssl crt ${SSL_PATH}/haproxy.pem
+    bind *:443 ssl crt /etc/letsencrypt/live/srestrepoj-wp.duckdns.org/haproxy.pem
     mode http
     redirect scheme https if !{ ssl_fc }
     default_backend wordpress_back
@@ -101,8 +101,8 @@ frontend wordpress_front
 backend wordpress_back
     mode http
     balance source
-    server wordpress1 10.225.4.10:80 check
-    server wordpress2 10.225.4.11:80 check
+    server wordpress1 10.225.4.10:443 check ssl verify none
+    server wordpress2 10.225.4.11:443 check ssl verify none
 EOL
 
 # Reinicia y habilita HAProxy
