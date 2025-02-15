@@ -66,8 +66,8 @@ sudo cp "${HAPROXY_CFG_PATH}" "${BACKUP_CFG_PATH}"
 # Configura HAProxy
 sudo tee "${HAPROXY_CFG_PATH}" > /dev/null <<EOL
 global
-    log /dev/log local0
-    log /dev/log local1 notice
+    log /dev/log    local0
+    log /dev/log    local1 notice
     chroot /var/lib/haproxy
     stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
     stats timeout 30s
@@ -76,11 +76,13 @@ global
     daemon
 
 defaults
-    log global
-    option dontlognull
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
     timeout connect 5000ms
-    timeout client 50000ms
-    timeout server 50000ms
+    timeout client  50000ms
+    timeout server  50000ms
     errorfile 400 /etc/haproxy/errors/400.http
     errorfile 403 /etc/haproxy/errors/403.http
     errorfile 408 /etc/haproxy/errors/408.http
@@ -89,37 +91,49 @@ defaults
     errorfile 503 /etc/haproxy/errors/503.http
     errorfile 504 /etc/haproxy/errors/504.http
 
-# Frontend HTTP (Redireccion de HTTP a HTTPS)
-frontend http_xmpp
-    bind *:80
-    mode http
-    redirect scheme https if !{ ssl_fc }
+# Definimos con los frontend los puertos que queremos que pasen a traves del proxy junto con la ip del servidor
 
-# Frontend XMPP (Solo HTTPS)
 frontend xmpp_front
-    bind *:443 ssl crt /etc/letsencrypt/live/srestrepoj-prosody.duckdns.org/haproxy.pem
+    bind *:5222       # Este puerto permite la comunicacion entre los usuarios
+    bind *:5269       # Este puerto permite la conexion del servidor xmpp en nuestro caso el prosody
+#    bind *:5000
     mode tcp
-    default_backend xmpp_back
+    option tcplog
+    default_backend xmpp_back       # Esta linea es el sitio al que iran las solicitudes de los puertos
 
-# Backend para XMPP
+frontend http_front
+    bind *:5280
+    bind *:5281
+    mode http
+    default_backend http_back
+
+frontend db_front
+    bind *:3306
+    mode tcp
+    option tcplog
+    default_backend db_back
+
+# Definimos con los backend la ip del servidor (xmpp-prosody) junto con los puertos previamente definidos en los frontend y sus balances de carga
+
 backend xmpp_back
     mode tcp
-    balance roundrobin
-    option tcp-check
-    # Servidores Prosody en 10.225.3.20
-    server prosody1 10.225.3.20:5222 check
-    server prosody2 10.225.3.20:5269 check
-    # Servidores Prosody en 10.225.3.30
-    server prosody3 10.225.3.30:5222 check
-    server prosody4 10.225.3.30:5269 check
+    balance roundrobin  # El balance de carga round robin distribuye el tráfico a una lista de servidores en rotación con el Sistema de nombres de dominio (DNS).
+    server mensajeria1 10.225.3.20:5222 check   # Definimos el servidor con un nombre, la ip y el puerto
+    server mensajeria2 10.225.3.20:5269 check
+    server mensajeria3 10.203.3.20:5000 check
 
-# Backend para Base de Datos (Primario y Secundario en Failover)
+backend http_back
+    mode http
+    balance roundrobin
+    http-request set-header X-Forwarded-For %[src]
+    server mensajeria4 10.225.3.20:5280 check
+    server mensajeria5 10.225.3.20:5281 check
+
 backend db_back
     mode tcp
     balance roundrobin
-    option tcp-check
     server db_primary 10.225.3.10:3306 check
-    server db_secondary 10.225.3.11:3306 check backup
+#    server db_secondary 10.225.4.11:3306 check backup   # Esta linea significa que si el primario se cae el secundario tomara el rol de primario
 EOL
 
 # Reinicia y habilita HAProxy
