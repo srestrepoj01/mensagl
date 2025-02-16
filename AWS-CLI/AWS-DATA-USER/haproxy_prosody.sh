@@ -128,7 +128,7 @@ backend xmpp_back
     balance roundrobin  # El balance de carga round robin distribuye el tráfico a una lista de servidores en rotación con el Sistema de nombres de dominio (DNS).
     server mensajeria1 10.225.3.20:5222 check   # Definimos el servidor con un nombre, la ip y el puerto
     server mensajeria2 10.225.3.20:5269 check
-    server mensajeria3 10.203.3.20:5000 check
+    server mensajeria3 10.225.3.20:5000 check
 
 backend http_back
     mode http
