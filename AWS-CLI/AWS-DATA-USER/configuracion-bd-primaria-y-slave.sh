@@ -1,3 +1,4 @@
+# Sebastian Restrepo Jaramillo - ASIR2
 #!/bin/bash
 set -x  # Activar modo de depuración
 

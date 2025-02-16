@@ -703,9 +703,9 @@ PRIVATE_IP="10.225.4.11"
 # EOF
 
 # Habilitar configuración de sitio y reiniciar Apache
-sudo a2dissite 000-default.conf
-sudo a2ensite wordpress-ssl.conf
-sudo systemctl reload apache2# EOF
+#sudo a2dissite 000-default.conf
+#sudo a2ensite wordpress-ssl.conf
+#sudo systemctl reload apache2# EOF
 # )
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id "$AMI_ID" \
