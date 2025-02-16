@@ -113,6 +113,14 @@ frontend db_front
     option tcplog
     default_backend db_back
 
+frontend https_upload_front
+    bind *:443 ssl crt /etc/letsencrypt/live/srestrepoj-upload.duckdns.org/haproxy-upload.pem
+    mode http
+    acl is_upload hdr(host) -i srestrepoj-upload.duckdns.org
+    use_backend upload_back if is_upload
+    default_backend http_back   # This will handle other domains if needed
+
+
 # Definimos con los backend la ip del servidor (xmpp-prosody) junto con los puertos previamente definidos en los frontend y sus balances de carga
 
 backend xmpp_back
@@ -134,6 +142,12 @@ backend db_back
     balance roundrobin
     server db_primary 10.225.3.10:3306 check
 #    server db_secondary 10.225.4.11:3306 check backup   # Esta linea significa que si el primario se cae el secundario tomara el rol de primario
+
+backend upload_back
+    mode http
+    balance roundrobin
+    http-request set-header X-Forwarded-For %[src]
+    server upload1 10.225.3.20:5281 check
 EOL
 
 # Reinicia y habilita HAProxy
